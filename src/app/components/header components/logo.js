@@ -1,0 +1,10 @@
+"use client";
+import React from "react";
+
+export default function Logo() {
+    return (
+        <div className="logo">
+        <h1>CASINO</h1>
+        </div>
+    );
+    }
