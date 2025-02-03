@@ -37,7 +37,7 @@ export default function Header() {
         >
           {/* LOGO */}
           <Typography variant="h6" sx={{ color: '#43bc93', marginRight: 3, fontWeight: 'bold' }}>
-            BundlesBet
+            BundlesBet CASINO
           </Typography>
 
           {/* TABS (Move below at ≤ 700px) */}
