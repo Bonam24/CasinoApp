@@ -5,7 +5,7 @@ export default function LeagueCard({ abbreviation, name }) {
     <Box
       sx={{
         width: { xs: '100%', sm: 170, md: 220 }, // Responsive width: full width on small screens, 200px on small screens, and 250px on medium screens
-        height: 'fit-content',
+        height: '15em',
         backgroundColor: '#1d1d1d',
         borderRadius: 2,
         display: 'flex',

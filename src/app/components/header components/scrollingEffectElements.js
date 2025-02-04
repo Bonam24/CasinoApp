@@ -19,7 +19,7 @@ export default function MarqueeEffect() {
           display: 'inline-block',
           whiteSpace: 'nowrap',
           animation: 'marquee 35s linear infinite',
-          color: '#00ff9f', // neon green color
+          color: '#13dfae', // neon green color
         }}
       >
         {dataToPass}

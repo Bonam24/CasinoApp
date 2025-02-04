@@ -1,5 +1,5 @@
 import { Box, Typography, Button } from '@mui/material';
-const BundlesBetphoneimg = '/images/bundlesbetphoneimg.png'; // Your image path
+const BundlesBetphoneimg = '/images/phoneimg.png'; // Your image path
 
 export default function WelcomeSection() {
   return (
@@ -10,7 +10,8 @@ export default function WelcomeSection() {
         alignItems: 'center', // Center elements
         justifyContent: 'center', // Center content
         padding: { xs: 2, sm: 4 },
-        backgroundColor: 'black',
+        background: 'radial-gradient(circle, rgba(19,223,174,0.3) 0%, rgba(0,0,0,1) 100%)',
+        height: '100vh',
         borderRadius: 2,
         marginTop: '3em',
         borderBottom: '5px solid #13dfae', // Bottom border
@@ -30,11 +31,11 @@ export default function WelcomeSection() {
           sx={{
             color: '#13dfae',
             fontWeight: 'bold',
-            fontSize: { xs: '1.5rem', sm: '3.5rem' }, // Reduced font size for smaller screens
+            fontSize: { xs: '1.5rem', sm: '4rem' }, // Reduced font size for smaller screens
             marginBottom: 0.5,
           }}
         >
-          Welcome to
+          WELCOME TO
         </Typography>
 
         <Typography
@@ -42,7 +43,7 @@ export default function WelcomeSection() {
           sx={{
             color: '#13dfae',
             fontWeight: 'bold',
-            fontSize: { xs: '2rem', sm: '2.5rem' }, // Reduced font size for smaller screens
+            fontSize: { xs: '2rem', sm: '4rem' }, // Reduced font size for smaller screens
             textTransform: 'uppercase',
             marginBottom: 1,
           }}
@@ -55,7 +56,6 @@ export default function WelcomeSection() {
           sx={{
             color: '#9e9e9e',
             fontSize: { xs: '0.8rem', sm: '1.5rem' }, // Reduced font size for smaller screens
-            fontStyle: 'italic',
             marginBottom: 0.5,
           }}
         >
@@ -66,7 +66,6 @@ export default function WelcomeSection() {
           sx={{
             color: '#9e9e9e',
             fontSize: { xs: '0.8rem', sm: '1.5rem' }, // Reduced font size for smaller screens
-            fontStyle: 'italic',
             marginBottom: 2,
           }}
         >
