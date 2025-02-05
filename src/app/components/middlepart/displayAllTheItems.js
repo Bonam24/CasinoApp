@@ -1,5 +1,6 @@
 import { Box } from '@mui/material';
 import IndividualItem from './individualItem';
+const imageUrl= './images/phoneimg.png';
 
 const items = [
     { title: 'English Premier League', description: 'Top-tier football league in England.' },

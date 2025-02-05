@@ -1,47 +1,56 @@
-import { AppBar, Toolbar, Typography, Tabs, Tab, Box, Button, useMediaQuery } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Tabs,
+  Tab,
+  Box,
+  Button,
+  useMediaQuery,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 
 export default function Header() {
   const [value, setValue] = useState(0);
-  const isMediumScreen = useMediaQuery('(max-width: 960px)'); // Tabs go down at ≤ 700px
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const isMediumScreen = useMediaQuery('(max-width: 1080px)');
+  const isSmallScreen = useMediaQuery('(max-width: 600px)');
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
+  const handleDrawerToggle = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
   return (
-    <AppBar
-      sx={{
-        backgroundColor: '#000000',
-        paddingX: 2,
-        marginTop: 0, // No margin at the top to make the header stick to the top
-        position: 'relative', // To make the header stick to the top
-      }}
-    >
-      {/* FIRST ROW: LOGO, TABS & CONNECT WALLET (Tabs go down at ≤ 700px) */}
+    <AppBar sx={{ backgroundColor: '#000000', paddingX: 2, position: 'relative' }}>
       <Toolbar
         sx={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: isMediumScreen ? 'space-between' : 'flex-start',
           alignItems: 'center',
           width: '100%',
-          flexWrap: isMediumScreen ? 'wrap' : 'nowrap', // Tabs move below at ≤ 700px
+          flexWrap: isMediumScreen ? 'wrap' : 'nowrap',
+          gap: 3, // Adds spacing between elements
         }}
       >
-        {/* LEFT SIDE: LOGO & TABS */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            flexWrap: isMediumScreen ? 'wrap' : 'nowrap',
-          }}
-        >
+        {/* LEFT SIDE: LOGO & TABS (FOR LARGE SCREENS) */}
+        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
           {/* LOGO */}
-          <Typography variant="h6" sx={{ color: '#13dfae', marginRight: 3, fontWeight: 'bold' }}>
+          <Typography variant="h6" sx={{ color: '#13dfae', fontWeight: 'bold' }}>
             BundlesBet CASINO
           </Typography>
 
-          {/* TABS (Move below at ≤ 700px) */}
+          {/* TABS (For Large Screens - Above 1080px) */}
           {!isMediumScreen && (
             <Tabs
               value={value}
@@ -49,16 +58,11 @@ export default function Header() {
               textColor="inherit"
               sx={{
                 minHeight: 48,
-                '& .MuiTabs-indicator': { display: 'none' }, // Hide default indicator
+                marginLeft: 2, // Push tabs next to BundlesBet CASINO
+                '& .MuiTabs-indicator': { display: 'none' },
               }}
             >
-              {[
-                { label: 'Home', href: '/' },
-                { label: 'Methodology', href: '#' },
-                { label: 'Tokenomics', href: '#' },
-                { label: 'Predictions', href: '#' },
-                { label: 'Top Picks', href: '#' },
-              ].map((item, index) => (
+              {['Home', 'Methodology', 'Tokenomics', 'Predictions', 'Top Picks'].map((label, index) => (
                 <Tab
                   key={index}
                   label={
@@ -67,10 +71,10 @@ export default function Header() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
-                        color: value === index ? '#13dfae' : 'white', 
+                        color: value === index ? '#13dfae' : 'white',
                         position: 'relative',
                         transition: 'color 0.3s',
-                        '&:hover': { color: '#13dfae' }, 
+                        '&:hover': { color: '#13dfae' },
                         '&:hover::after': {
                           content: '""',
                           position: 'absolute',
@@ -83,68 +87,56 @@ export default function Header() {
                       }}
                     >
                       {value === index && (
-                        <Box
-                          sx={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            backgroundColor: '#13dfae',
-                          }}
-                        />
+                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#13dfae' }} />
                       )}
-                      {item.label}
+                      {label}
                     </Box>
                   }
-                  component="a"
-                  href={item.href}
                 />
               ))}
             </Tabs>
           )}
         </Box>
 
-        {/* RIGHT SIDE: CONNECT WALLET BUTTON */}
-        <Button
-          variant="outlined"
-          sx={{
-            borderColor: '#13dfae',
-            color: '#000000',
-            backgroundColor: '#13dfae',
-            '&:hover': {
-              backgroundColor: '#00cc7a', // Darker green on hover
-              borderColor: '#00cc7a',
-            },
-          }}
-        >
-          Connect Wallet
-        </Button>
+        {/* CONNECT WALLET BUTTON (Visible on medium & large screens) */}
+        {!isSmallScreen && (
+          <Button
+            variant="outlined"
+            sx={{
+              borderColor: '#13dfae',
+              color: '#000000',
+              backgroundColor: '#13dfae',
+              '&:hover': {
+                backgroundColor: '#00cc7a',
+                borderColor: '#00cc7a',
+              },
+            }}
+          >
+            Connect Wallet
+          </Button>
+        )}
+
+        {/* HAMBURGER MENU (For Small Screens) */}
+        {isSmallScreen && (
+          <IconButton edge="end" color="inherit" onClick={handleDrawerToggle} sx={{ ml: 2 }}>
+            <MenuIcon />
+          </IconButton>
+        )}
       </Toolbar>
 
-      {/* SEPARATE TABS ROW ON SMALL SCREENS (Move down at ≤ 700px) */}
-      {isMediumScreen && (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            marginTop: 1,
-          }}
-        >
+      {/* SECOND ROW: TABS (Only on Medium Screens ≤1080px) */}
+      {isMediumScreen && !isSmallScreen && (
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 1 }}>
           <Tabs
             value={value}
             onChange={handleChange}
             textColor="inherit"
             sx={{
               minHeight: 48,
-              '& .MuiTabs-indicator': { display: 'none' }, // Hide default indicator
+              '& .MuiTabs-indicator': { display: 'none' },
             }}
           >
-            {[
-              { label: 'Home', href: '/' },
-              { label: 'Methodology', href: '#' },
-              { label: 'Tokenomics', href: '#' },
-              { label: 'Predictions', href: '#' },
-              { label: 'Top Picks', href: '#' },
-            ].map((item, index) => (
+            {['Home', 'Methodology', 'Tokenomics', 'Predictions', 'Top Picks'].map((label, index) => (
               <Tab
                 key={index}
                 label={
@@ -153,10 +145,10 @@ export default function Header() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 1,
-                      color: value === index ? '#43bc93' : 'white', // White default, neon green when active
+                      color: value === index ? '#13dfae' : 'white',
                       position: 'relative',
                       transition: 'color 0.3s',
-                      '&:hover': { color: '#43bc93' }, // Change to neon green on hover
+                      '&:hover': { color: '#13dfae' },
                       '&:hover::after': {
                         content: '""',
                         position: 'absolute',
@@ -164,30 +156,53 @@ export default function Header() {
                         left: 0,
                         width: '100%',
                         height: '2px',
-                        backgroundColor: '#43bc93',
+                        backgroundColor: '#13dfae',
                       },
                     }}
                   >
                     {value === index && (
-                      <Box
-                        sx={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          backgroundColor: '#43bc93',
-                        }}
-                      />
+                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#13dfae' }} />
                     )}
-                    {item.label}
+                    {label}
                   </Box>
                 }
-                component="a"
-                href={item.href}
               />
             ))}
           </Tabs>
         </Box>
       )}
+
+      {/* DRAWER FOR SMALL SCREENS */}
+      <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerToggle}>
+        <Box sx={{ width: 250 }}>
+          <List>
+            {['Home', 'Methodology', 'Tokenomics', 'Predictions', 'Top Picks'].map((label, index) => (
+              <ListItem button key={index} onClick={() => setValue(index)}>
+                <ListItemButton>
+                  <Typography>{label}</Typography>
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          <Box sx={{ padding: 2 }}>
+            <Button
+              variant="outlined"
+              sx={{
+                width: '100%',
+                borderColor: '#13dfae',
+                color: '#000000',
+                backgroundColor: '#13dfae',
+                '&:hover': {
+                  backgroundColor: '#00cc7a',
+                  borderColor: '#00cc7a',
+                },
+              }}
+            >
+              Connect Wallet
+            </Button>
+          </Box>
+        </Box>
+      </Drawer>
     </AppBar>
   );
 }
