@@ -48,12 +48,13 @@ export default function LeagueCard({ abbreviation, name }) {
 
       {/* View Predictions Button */}
       <Button
+      
   variant="contained"
   sx={{
-    backgroundColor: '#43bc93',
-    color: 'white',
+    backgroundColor: '#13dfae',
+    color: '#000',
     '&:hover': {
-      backgroundColor: '#00ff7f',
+      backgroundColor: '#43bc93',
     },
     padding: { xs: '4px 6px', sm: '6px 10px' }, // Responsive padding
     fontSize: { xs: '0.6rem', sm: '0.8rem', md: '0.9rem' }, // Font size reduces on smaller screens

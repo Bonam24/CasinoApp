@@ -37,7 +37,7 @@ export default function Header() {
           }}
         >
           {/* LOGO */}
-          <Typography variant="h6" sx={{ color: '#43bc93', marginRight: 3, fontWeight: 'bold' }}>
+          <Typography variant="h6" sx={{ color: '#13dfae', marginRight: 3, fontWeight: 'bold' }}>
             BundlesBet CASINO
           </Typography>
 
@@ -67,10 +67,10 @@ export default function Header() {
                         display: 'flex',
                         alignItems: 'center',
                         gap: 1,
-                        color: value === index ? '#43bc93' : 'white', // White default, neon green when active
+                        color: value === index ? '#13dfae' : 'white', 
                         position: 'relative',
                         transition: 'color 0.3s',
-                        '&:hover': { color: '#43bc93' }, // Change to neon green on hover
+                        '&:hover': { color: '#13dfae' }, 
                         '&:hover::after': {
                           content: '""',
                           position: 'absolute',
@@ -78,7 +78,7 @@ export default function Header() {
                           left: 0,
                           width: '100%',
                           height: '2px',
-                          backgroundColor: '#43bc93',
+                          backgroundColor: '#13dfae',
                         },
                       }}
                     >
@@ -88,7 +88,7 @@ export default function Header() {
                             width: 6,
                             height: 6,
                             borderRadius: '50%',
-                            backgroundColor: '#43bc93',
+                            backgroundColor: '#13dfae',
                           }}
                         />
                       )}
@@ -107,9 +107,9 @@ export default function Header() {
         <Button
           variant="outlined"
           sx={{
-            borderColor: '#43bc93',
+            borderColor: '#13dfae',
             color: '#000000',
-            backgroundColor: '#43bc93',
+            backgroundColor: '#13dfae',
             '&:hover': {
               backgroundColor: '#00cc7a', // Darker green on hover
               borderColor: '#00cc7a',

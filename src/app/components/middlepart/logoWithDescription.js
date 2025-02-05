@@ -78,8 +78,8 @@ export default function WelcomeSection() {
             variant="contained"
             sx={{
               backgroundColor: '#13dfae',
-              color: 'white',
-              '&:hover': { backgroundColor: '#00ff7f' },
+              color: 'black',
+              '&:hover': { backgroundColor: '#13dfde' },
               fontSize: { xs: '0.8rem', sm: '1rem' },
               padding: '8px 16px',
             }}
