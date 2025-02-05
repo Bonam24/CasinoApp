@@ -51,6 +51,9 @@ export default function SearchBar() {
               borderColor: '#00ff7f', // Focused field glowing green
               boxShadow: '0 0 10px 2px #00ff7f', // Glow effect when focused
             },
+            '& input': {
+              color: 'white', // Set text color to white
+            },
             '& input::placeholder': {
               color: 'white', // Set placeholder text color to white
             },
