@@ -23,6 +23,7 @@ export default function App() {
         display: 'flex',
         flexWrap: 'wrap', // Ensure items wrap to the next line
         gap: 2, // Ensure there is space between the items, so they don't touch
+        backgroundColor: '#000',
       }}
     >
       {/* Map through the items array and render IndividualItem for each item */}
