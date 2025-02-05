@@ -11,7 +11,7 @@ export default function MarqueeEffect() {
         overflow: 'hidden',
         backgroundColor: '#000000', // black background
         padding: 1,
-        marginTop:"4em",
+        marginTop:"0",
       }}
     >
       <Box

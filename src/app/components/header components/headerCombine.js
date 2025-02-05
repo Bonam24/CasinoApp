@@ -15,6 +15,7 @@ export default function Header() {
         backgroundColor: '#000000',
         paddingX: 2,
         marginTop: 0, // No margin at the top to make the header stick to the top
+        position: 'relative', // To make the header stick to the top
       }}
     >
       {/* FIRST ROW: LOGO, TABS & CONNECT WALLET (Tabs go down at ≤ 700px) */}

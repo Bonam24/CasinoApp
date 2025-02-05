@@ -39,7 +39,7 @@ export default function LeagueCard({ abbreviation, name }) {
         variant="body1"
         sx={{
           color: 'white',
-          fontSize: { xs: '0.5rem', sm: '0.9rem' }, // Adjust font size for different screen sizes
+          fontSize: { xs: '0.6rem', sm: '0.9rem' }, // Adjust font size for different screen sizes
           marginBottom: 2,
         }}
       >

@@ -12,8 +12,7 @@ const items = [
     { title: 'NFL', description: 'Top professional American football league.' },
     { title: 'MLB', description: 'Major League Baseball in North America.' },
     { title: 'NHL', description: 'Premier ice hockey league in North America.' },
-  ];
-  
+];
 
 export default function App() {
   return (
@@ -21,22 +20,23 @@ export default function App() {
       sx={{
         padding: 2,
         display: 'flex',
-        flexWrap: 'wrap', // Ensure items wrap to the next line
-        gap: 2, // Ensure there is space between the items, so they don't touch
+        flexWrap: 'wrap',
+        gap: 2,
+        justifyContent: 'center', // Center items horizontally
         backgroundColor: '#000',
+        marginLeft: "2%",
       }}
     >
-      {/* Map through the items array and render IndividualItem for each item */}
       {items.map((item, index) => (
         <Box
           key={index}
           sx={{
             width: {
-              xs: 'calc(33.33% - 16px)',  // 3 items per row for extra small screens
-              sm: 'calc(25% - 16px)',      // 4 items per row for small screens (tablets)
-              md: 'calc(20% - 16px)',      // 5 items per row for medium and larger screens (desktops)
+              xs: 'calc(45.00% - 16px)',  
+              sm: 'calc(25% - 16px)',      
+              md: 'calc(20% - 16px)',      
             },
-            marginBottom: 2, // Add margin at the bottom of each item
+            marginBottom: 2, 
           }}
         >
           <IndividualItem abbreviation={item.title} name={item.description} />
