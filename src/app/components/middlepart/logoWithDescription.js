@@ -48,7 +48,7 @@ export default function WelcomeSection() {
             marginBottom: 1,
           }}
         >
-          BUNDLESBET
+          BUNDLESBETS
         </Typography>
 
         <Typography
@@ -59,7 +59,7 @@ export default function WelcomeSection() {
             marginBottom: 0.5,
           }}
         >
-          AI Powered
+          Make BundlesBets AI
         </Typography>
         <Typography
           variant="h5"
@@ -69,7 +69,7 @@ export default function WelcomeSection() {
             marginBottom: 2,
           }}
         >
-          WEB3 Prediction Platform
+          your Sports Assistant...
         </Typography>
 
         {/* Buttons */}

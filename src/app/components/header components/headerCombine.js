@@ -47,7 +47,7 @@ export default function Header() {
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
           {/* LOGO */}
           <Typography variant="h6" sx={{ color: '#13dfae', fontWeight: 'bold' }}>
-            BundlesBet CASINO
+          Bundlesbets AI Agent
           </Typography>
 
           {/* TABS (For Large Screens - Above 1080px) */}
