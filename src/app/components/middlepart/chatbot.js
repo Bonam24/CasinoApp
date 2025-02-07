@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Fab, Paper, TextField, IconButton, Typography, Box } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
@@ -10,15 +10,38 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
-    setMessages([...messages, { text: input, sender: "user" }]);
-    setInput("");
-    // Simulate bot response
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { text: "Hello! How can I help?", sender: "bot" }]);
-    }, 1000);
-  };
+  const [loading, setLoading] = useState(false);
+
+const handleSendMessage = async () => {
+  if (!input.trim() || loading) return;
+  
+  setLoading(true);  // Disable input while waiting for response
+
+  const userMessage = { text: input, sender: "user" };
+  setMessages((prev) => [...prev, userMessage]);
+  setInput("");
+
+  try {
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: input }),
+    });
+
+    const data = await response.json();
+    const botMessage = { 
+      text: data.response || "Sorry, I didn't understand that.", 
+      sender: "bot" 
+    };
+    setMessages((prev) => [...prev, botMessage]);
+  } catch (error) {
+    setMessages((prev) => [...prev, { text: "Error communicating with chatbot.", sender: "bot" }]);
+  } finally {
+    setLoading(false);  // Re-enable input
+  }
+};
+
+  
 
   return (
     <>
