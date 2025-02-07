@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Fab, Paper, TextField, IconButton, Typography, Box } from "@mui/material";
+import ReactMarkdown from "react-markdown";
+import { Fab, Paper, TextField, IconButton, Typography, Box, CircularProgress } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
@@ -9,39 +10,35 @@ export default function Chatbot() {
   const [showMessage, setShowMessage] = useState(true);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-
   const [loading, setLoading] = useState(false);
 
-const handleSendMessage = async () => {
-  if (!input.trim() || loading) return;
-  
-  setLoading(true);  // Disable input while waiting for response
+  const handleSendMessage = async () => {
+    if (!input.trim() || loading) return;
+    
+    setLoading(true);
+    const userMessage = { text: input, sender: "user" };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
 
-  const userMessage = { text: input, sender: "user" };
-  setMessages((prev) => [...prev, userMessage]);
-  setInput("");
-
-  try {
-    const response = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: input }),
-    });
-
-    const data = await response.json();
-    const botMessage = { 
-      text: data.response || "Sorry, I didn't understand that.", 
-      sender: "bot" 
-    };
-    setMessages((prev) => [...prev, botMessage]);
-  } catch (error) {
-    setMessages((prev) => [...prev, { text: "Error communicating with chatbot.", sender: "bot" }]);
-  } finally {
-    setLoading(false);  // Re-enable input
-  }
-};
-
-  
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: input }),
+      });
+      
+      const data = await response.json();
+      const botMessage = { 
+        text: data.response || "Sorry, I didn't understand that.", 
+        sender: "bot" 
+      };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      setMessages((prev) => [...prev, { text: "Error communicating with chatbot.", sender: "bot" }]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -93,17 +90,18 @@ const handleSendMessage = async () => {
               >
                 <Typography 
                   variant="body2" 
-                  sx={{ 
-                    p: 1, 
-                    borderRadius: 1, 
-                    display: "inline-block", 
-                    bgcolor: msg.sender === "user" ? "#11c59b" : "grey.300"
-                  }}
+                  component="div"
+                  sx={{ p: 1, borderRadius: 1, display: "inline-block", bgcolor: msg.sender === "user" ? "#11c59b" : "grey.300" }}
                 >
-                  {msg.text}
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </Typography>
               </div>
             ))}
+            {loading && (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <CircularProgress size={24} />
+              </Box>
+            )}
           </div>
           <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
             <TextField 
