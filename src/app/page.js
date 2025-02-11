@@ -3,20 +3,20 @@ import React from "react";
 
 import LogoWithDescription from "./components/middlepart/logoWithDescription";
 import HeaderPlusMarquee from "./components/header components/headerplusMarquee";
-import SearchBar from "./components/middlepart/searchBar";
-import DisplayAllTheItems from "./components/middlepart/displayAllTheItems";
 import Footer from "./components/footer/footer";
 import Chatbot from "./components/middlepart/chatbot";
+import Leagues from "./components/middlepart/testLeague";
+import TabsOfSports from "./components/middlepart/tabsOfSports";
 
 export default function Home() {
   return (
     <div>
       <HeaderPlusMarquee/>
       <LogoWithDescription/>
-      <SearchBar/>
-      <DisplayAllTheItems/>
       <Chatbot/>
-      <Footer/>
+      <TabsOfSports/>
+      <Leagues/>
+      <Footer/>    
     </div>
   );
 }

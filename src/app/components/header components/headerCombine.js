@@ -1,17 +1,4 @@
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Tabs,
-  Tab,
-  Box,
-  Button,
-  useMediaQuery,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
+import {AppBar,Toolbar,Typography,Tabs,Tab,Box,Button,useMediaQuery,IconButton,Drawer,List,ListItem,ListItemButton,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
@@ -62,7 +49,7 @@ export default function Header() {
                 '& .MuiTabs-indicator': { display: 'none' },
               }}
             >
-              {['Home', 'Methodology', 'Tokenomics', 'Predictions', 'Top Picks'].map((label, index) => (
+              {['Home', 'Methodology', 'Tokenomics', 'Predictions'].map((label, index) => (
                 <Tab
                   key={index}
                   label={
