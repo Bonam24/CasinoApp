@@ -4,7 +4,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
 
 export default function Header() {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const isMediumScreen = useMediaQuery('(max-width: 1080px)');
@@ -40,48 +40,55 @@ export default function Header() {
           {/* TABS (For Large Screens - Above 1080px) */}
           {!isMediumScreen && (
             <Tabs
-              value={value}
-              onChange={handleChange}
-              textColor="inherit"
-              sx={{
-                minHeight: 48,
-                marginLeft: 2, // Push tabs next to BundlesBet CASINO
-                '& .MuiTabs-indicator': { display: 'none' },
-              }}
-            >
-              {['Home', 'Methodology', 'Tokenomics', 'Predictions'].map((label, index) => (
-                <Tab
-                  key={index}
-                  label={
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        color: value === index ? '#13dfae' : 'white',
-                        position: 'relative',
-                        transition: 'color 0.3s',
-                        '&:hover': { color: '#13dfae' },
-                        '&:hover::after': {
-                          content: '""',
-                          position: 'absolute',
-                          bottom: -2,
-                          left: 0,
-                          width: '100%',
-                          height: '2px',
-                          backgroundColor: '#13dfae',
-                        },
-                      }}
-                    >
-                      {value === index && (
-                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#13dfae' }} />
-                      )}
-                      {label}
-                    </Box>
-                  }
-                />
-              ))}
-            </Tabs>
+            value={value}
+            onChange={(event, newValue) => {
+              if (newValue === 0) {
+                window.open("https://bundlesbets.com/", "_blank");
+              } else {
+                setValue(newValue);
+              }
+            }}
+            textColor="inherit"
+            sx={{
+              minHeight: 48,
+              marginLeft: 2,
+              '& .MuiTabs-indicator': { display: 'none' },
+            }}
+          >
+            {['Home', 'Methodology', 'Tokenomics', 'Predictions'].map((label, index) => (
+              <Tab
+                key={index}
+                label={
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      color: value === index ? '#13dfae' : 'white',
+                      position: 'relative',
+                      transition: 'color 0.3s',
+                      '&:hover': { color: '#13dfae' },
+                      '&:hover::after': {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: -2,
+                        left: 0,
+                        width: '100%',
+                        height: '2px',
+                        backgroundColor: '#13dfae',
+                      },
+                    }}
+                  >
+                    {value === index && (
+                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#13dfae' }} />
+                    )}
+                    {label}
+                  </Box>
+                }
+              />
+            ))}
+          </Tabs>
+          
           )}
         </Box>
 
