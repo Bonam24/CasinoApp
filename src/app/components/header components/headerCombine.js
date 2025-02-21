@@ -136,7 +136,13 @@ export default function Header() {
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 1 }}>
           <Tabs
             value={value}
-            onChange={handleChange}
+            onChange={(event, newValue) => {
+              if (newValue === 0) {
+                window.open("https://bundlesbets.com/", "_blank");
+              } else {
+                setValue(newValue);
+              }
+            }}
             textColor="inherit"
             sx={{
               minHeight: 48,
@@ -181,35 +187,46 @@ export default function Header() {
 
       {/* DRAWER FOR SMALL SCREENS */}
       <Drawer anchor="right" open={drawerOpen} onClose={handleDrawerToggle}>
-        <Box sx={{ width: 250 }}>
-          <List>
-            {['Home', 'Methodology', 'Tokenomics', 'Predictions', 'Top Picks'].map((label, index) => (
-              <ListItem button key={index} onClick={() => setValue(index)}>
-                <ListItemButton>
-                  <Typography>{label}</Typography>
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-          <Box sx={{ padding: 2 }}>
-            <Button
-              variant="outlined"
-              sx={{
-                width: '100%',
-                borderColor: '#13dfae',
-                color: '#000000',
-                backgroundColor: '#13dfae',
-                '&:hover': {
-                  backgroundColor: '#00cc7a',
-                  borderColor: '#00cc7a',
-                },
-              }}
-            >
-              Connect Wallet
-            </Button>
-          </Box>
-        </Box>
-      </Drawer>
+  <Box sx={{ width: 250 }}>
+    <List>
+      {['Home', 'Methodology', 'Predictions'].map((label, index) => (
+        <ListItem
+          button
+          key={index}
+          onClick={() => {
+            if (label === 'Home') {
+              window.open("https://bundlesbets.com/", "_blank");
+            } else {
+              setValue(index);
+            }
+          }}
+        >
+          <ListItemButton>
+            <Typography>{label}</Typography>
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+    <Box sx={{ padding: 2 }}>
+      <Button
+        variant="outlined"
+        sx={{
+          width: '100%',
+          borderColor: '#13dfae',
+          color: '#000000',
+          backgroundColor: '#13dfae',
+          '&:hover': {
+            backgroundColor: '#00cc7a',
+            borderColor: '#00cc7a',
+          },
+        }}
+      >
+        Connect Wallet
+      </Button>
+    </Box>
+  </Box>
+</Drawer>
+
        {/* Wallet Connection Dialog */}
        <Dialog open={walletDialogOpen} onClose={handleWalletDialogClose}>
         <DialogTitle>Connect Wallet</DialogTitle>
