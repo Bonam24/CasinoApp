@@ -71,7 +71,7 @@ const Login = () => {
           borderRadius: 3,
           maxWidth: 500,
           zIndex: 1,
-          marginTop: { xs: tab === 1 ? "8em" : "1em", sm: "1em" },
+          marginTop: { xs: tab === 1 ? "18em" : "0em", sm: "0em" },
         }}
       >
         <StyledTabs value={tab} onChange={(e, newValue) => setTab(newValue)} centered>
