@@ -4,20 +4,21 @@ const BundlesBetphoneimg = '/images/phoneimg.png'; // Your image path
 export default function WelcomeSection() {
   return (
     <Box
-      sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' }, // Column for small screens, row for larger
-        alignItems: 'center', // Center elements
-        justifyContent: 'center', // Center content
-        padding: { xs: 2, sm: 4 },
-        background: 'radial-gradient(circle, rgba(19,223,174,0.3) 0%, rgba(0,0,0,1) 100%)',
-        height: '100vh',
-        borderRadius: 2,
-        marginTop: '3em',
-        borderBottom: '5px solid #13dfae', // Bottom border
-        gap: { xs: 2, sm: 5 }, // Adjust spacing between text and image
-      }}
-    >
+  sx={{
+    display: 'flex',
+    flexDirection: { xs: 'column', sm: 'row' }, // Column for small screens, row for larger
+    alignItems: 'center', // Center elements
+    justifyContent: 'center', // Center content
+    padding: { xs: 2, sm: 4 },
+    background: 'radial-gradient(circle, rgba(19,223,174,0.3) 0%, rgba(0,0,0,1) 100%)',
+    height: '100vh',
+    borderRadius: 2,
+    marginTop: { xs: '0.5em', sm: '3em' }, // Reduced margin for small screens
+    borderBottom: '5px solid #13dfae', // Bottom border
+    gap: { xs: 2, sm: 5 }, // Adjust spacing between text and image
+  }}
+>
+
       {/* Left Side: Text */}
       <Box
         sx={{
