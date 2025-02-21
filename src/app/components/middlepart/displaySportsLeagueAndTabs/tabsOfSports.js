@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, X } from "lucide-react";
 import sportsData from "../sportApisData/apiEndpointsData.json"; // Import JSON
 
 export default function SportsFilter({ onSelectSport }) {
-  const [selectedSport, setSelectedSport] = useState("");
+  const sports = sportsData.sports || []; 
+  const [selectedSport, setSelectedSport] = useState(sports.length > 0 ? sports[0].name : "");
   const [isOpen, setIsOpen] = useState(false);
 
   // Extract sports array from JSON
-  const sports = sportsData.sports || []; 
+
+  useEffect(() => {
+    if (sports.length > 0) {
+      onSelectSport(sports[0].api); // Pass first sport's API URL to parent component
+    }
+  }, [sports, onSelectSport]);
 
   const handleSelectSport = (sport) => {
     setSelectedSport(sport.name);

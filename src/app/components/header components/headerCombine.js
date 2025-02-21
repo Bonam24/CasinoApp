@@ -1,11 +1,23 @@
-import {AppBar,Toolbar,Typography,Tabs,Tab,Box,Button,useMediaQuery,IconButton,Drawer,List,ListItem,ListItemButton,
+import {AppBar,Toolbar,Typography,Tabs,Tab,Box,Button,useMediaQuery,IconButton,Drawer,List,ListItem,ListItemButton,Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
+import PaymentGatewaySelector from '../middlepart/paymentGateways/paymentSelection';
 
 export default function Header() {
   const [value, setValue] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [walletDialogOpen, setWalletDialogOpen] = useState(false);
+  const handleWalletDialogOpen = () => {
+    setWalletDialogOpen(true);
+  };
+
+  const handleWalletDialogClose = () => {
+    setWalletDialogOpen(false);
+  };
 
   const isMediumScreen = useMediaQuery('(max-width: 1080px)');
   const isSmallScreen = useMediaQuery('(max-width: 600px)');
@@ -55,7 +67,7 @@ export default function Header() {
               '& .MuiTabs-indicator': { display: 'none' },
             }}
           >
-            {['Home', 'Methodology', 'Tokenomics', 'Predictions'].map((label, index) => (
+            {['Home', 'Methodology', 'Predictions'].map((label, index) => (
               <Tab
                 key={index}
                 label={
@@ -105,6 +117,7 @@ export default function Header() {
                 borderColor: '#00cc7a',
               },
             }}
+            onClick={handleWalletDialogOpen}
           >
             Connect Wallet
           </Button>
@@ -130,7 +143,7 @@ export default function Header() {
               '& .MuiTabs-indicator': { display: 'none' },
             }}
           >
-            {['Home', 'Methodology', 'Tokenomics', 'Predictions', 'Top Picks'].map((label, index) => (
+            {['Home', 'Methodology', 'Predictions'].map((label, index) => (
               <Tab
                 key={index}
                 label={
@@ -197,6 +210,17 @@ export default function Header() {
           </Box>
         </Box>
       </Drawer>
+       {/* Wallet Connection Dialog */}
+       <Dialog open={walletDialogOpen} onClose={handleWalletDialogClose}>
+        <DialogTitle>Connect Wallet</DialogTitle>
+        <DialogContent>
+          <Typography>Select your wallet provider to connect:</Typography>
+          <PaymentGatewaySelector />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleWalletDialogClose} color="error">Close</Button>
+        </DialogActions>
+      </Dialog>
     </AppBar>
   );
 }
