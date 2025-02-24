@@ -1,9 +1,24 @@
-"use client";
+'use client'; // Mark this component as a Client Component
+
 import React, { useState } from "react";
-import { TextField, Button, Box, Typography, Paper, Link, Tabs, Tab, MenuItem, Grid, IconButton, InputAdornment } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Paper,
+  Link,
+  Tabs,
+  Tab,
+  MenuItem,
+  Grid,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
 import { styled } from "@mui/system";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import { Visibility, VisibilityOff } from "@mui/icons-material"; // Import icons for show/hide password
+import { login, signup } from "./action"; // Import server actions
 
 const CustomButton = styled(Button)({
   backgroundColor: "#13dfae",
@@ -41,14 +56,123 @@ const BackgroundAnimation = styled(motion.div)({
 
 const Login = () => {
   const [tab, setTab] = useState(0);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    country: "USA",
+    dob: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State to toggle confirm password visibility
+
   const today = new Date().toISOString().split("T")[0];
   const minDate = new Date();
   minDate.setFullYear(minDate.getFullYear() - 18);
   const minDOB = minDate.toISOString().split("T")[0];
+
+  // Handle input change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Handle login submission
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const formData = new FormData(e.target);
+    const { error } = await login(formData);
+
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+    } else {
+      setMessage("Login successful! Redirecting...");
+      // Redirect is handled in the server action
+    }
+  };
+
+  // Handle signup submission
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    // Validate all fields
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.dob ||
+      !formData.password
+    ) {
+      setMessage("All fields are required");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setMessage("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    const formDataObj = new FormData();
+    formDataObj.append("email", formData.email);
+    formDataObj.append("password", formData.password);
+
+    const { error } = await signup(formDataObj);
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      setMessage("Registration successful! ✅");
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        country: "USA",
+        dob: "",
+        password: "",
+        confirmPassword: "",
+      });
+    }
+
+    setLoading(false);
+  };
+
+  // Get country code and flag based on selected country
+  const getCountryCodeAndFlag = () => {
+    switch (formData.country) {
+      case "USA":
+        return { code: "+1", flag: "🇺🇸" };
+      case "Canada":
+        return { code: "+1", flag: "🇨🇦" };
+      case "Mexico":
+        return { code: "+52", flag: "🇲🇽" };
+      default:
+        return { code: "", flag: "" };
+    }
+  };
+
+  const { code, flag } = getCountryCodeAndFlag();
+
+  // Toggle password visibility
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+  const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
+
+  // Check if passwords match
+  const passwordsMatch = formData.password === formData.confirmPassword;
 
   return (
     <Box
@@ -71,7 +195,7 @@ const Login = () => {
           borderRadius: 3,
           maxWidth: 500,
           zIndex: 1,
-          marginTop: { xs: tab === 1 ? "18em" : "0em", sm: "0em" },
+          marginTop: { xs: tab === 1 ? "18em" : "2em", sm: "4em", md: "6em" },
         }}
       >
         <StyledTabs value={tab} onChange={(e, newValue) => setTab(newValue)} centered>
@@ -80,12 +204,36 @@ const Login = () => {
         </StyledTabs>
         <Box sx={{ display: tab === 0 ? "block" : "block" }}>
           {tab === 0 && (
-            <>
+            <form onSubmit={handleLogin}>
               <Typography variant="h5" fontWeight="bold" textAlign="center" mb={2}>
                 Login
               </Typography>
-              <TextField fullWidth label="Email" margin="normal" variant="outlined" />
-              <TextField fullWidth label="Password" type="password" margin="normal" variant="outlined" />
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                margin="normal"
+                variant="outlined"
+                required
+              />
+              <TextField
+                fullWidth
+                label="Password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                margin="normal"
+                variant="outlined"
+                required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={handleClickShowPassword}>
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
               <Box display="flex" justifyContent="space-between" mt={1}>
                 <Link href="#" variant="body2">Forgot Password?</Link>
                 <Typography variant="body2">
@@ -93,58 +241,98 @@ const Login = () => {
                 </Typography>
               </Box>
               <Box mt={2}>
-                <CustomButton fullWidth>Sign In</CustomButton>
+                <CustomButton type="submit" fullWidth disabled={loading}>
+                  {loading ? "Logging in..." : "Sign In"}
+                </CustomButton>
               </Box>
-            </>
+              {message && <Typography color={message.includes("success") ? "green" : "red"}>{message}</Typography>}
+            </form>
           )}
           {tab === 1 && (
-            <Box mt={3}>
+            <Box mt={3} component="form" onSubmit={handleRegister}>
               <Typography variant="h5" fontWeight="bold" textAlign="center" mb={2}>
                 Sign Up
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Full Name" margin="normal" variant="outlined" />
+                  <TextField fullWidth label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} margin="normal" variant="outlined" required />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Username" margin="normal" variant="outlined" />
+                  <TextField fullWidth label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} margin="normal" variant="outlined" required />
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Email" margin="normal" variant="outlined" />
+                <Grid item xs={12}>
+                  <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} margin="normal" variant="outlined" required />
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Phone Number" margin="normal" variant="outlined" />
-                </Grid>
+                {/* Country Field */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     select
                     fullWidth
                     label="Country"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
                     margin="normal"
                     variant="outlined"
-                    defaultValue="USA"
+                    required
                   >
-                    <MenuItem value="USA">USA</MenuItem>
-                    <MenuItem value="Canada">Canada</MenuItem>
-                    <MenuItem value="Mexico">Mexico</MenuItem>
+                    <MenuItem value="USA"> USA</MenuItem>
+                    <MenuItem value="Canada"> Canada</MenuItem>
+                    <MenuItem value="Mexico"> Mexico</MenuItem>
                   </TextField>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Date of Birth" type="date" margin="normal" variant="outlined" inputProps={{ max: minDOB }} />
-                </Grid>
+                {/* Phone Field */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    label="Password"
-                    type={showPassword ? "text" : "password"}
+                    label="Phone Number"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
                     margin="normal"
                     variant="outlined"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="123-456-7890"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          {code}
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                {/* Date of Birth Field */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    name="dob"
+                    type="date"
+                    value={formData.dob}
+                    onChange={handleChange}
+                    margin="normal"
+                    variant="outlined"
+                    inputProps={{ max: minDOB }}
+                    required
+                    helperText="Please enter your date of birth"
+                  />
+                </Grid>
+                {/* Password Field */}
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    margin="normal"
+                    variant="outlined"
+                    required
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
-                          <IconButton onClick={() => setShowPassword(!showPassword)}>
+                          <IconButton onClick={handleClickShowPassword}>
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
@@ -152,20 +340,22 @@ const Login = () => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                {/* Confirm Password Field */}
+                <Grid item xs={12}>
                   <TextField
                     fullWidth
                     label="Confirm Password"
+                    name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
                     margin="normal"
                     variant="outlined"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    helperText={password && confirmPassword && password !== confirmPassword ? "Passwords do not match" : ""}
+                    required
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
-                          <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                          <IconButton onClick={handleClickShowConfirmPassword}>
                             {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
@@ -173,10 +363,21 @@ const Login = () => {
                     }}
                   />
                 </Grid>
+                {/* Password Match Indicator */}
+                {formData.confirmPassword && (
+                  <Grid item xs={12}>
+                    <Typography color={passwordsMatch ? "green" : "red"}>
+                      {passwordsMatch ? "Passwords match ✅" : "Passwords do not match ❌"}
+                    </Typography>
+                  </Grid>
+                )}
               </Grid>
               <Box mt={2}>
-                <CustomButton fullWidth>Register</CustomButton>
+                <CustomButton fullWidth type="submit" disabled={loading}>
+                  {loading ? "Registering..." : "Register"}
+                </CustomButton>
               </Box>
+              {message && <Typography color={message.includes("success") ? "green" : "red"}>{message}</Typography>}
             </Box>
           )}
         </Box>
