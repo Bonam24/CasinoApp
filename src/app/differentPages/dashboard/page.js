@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -44,8 +44,20 @@ import {
   Sports,
   Payment,
   EmojiEvents,
+  AddCircleOutline,
+  History,
+  AccountBalance,
+  LocalAtm,
+  Redeem,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
+import { createClient } from "@supabase/supabase-js"; // Import Supabase client
+import { logout } from "../loginPage/action"; // Import the logout function
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Custom styled components
 const DashboardPaper = styled(Paper)({
@@ -61,22 +73,71 @@ const DashboardPaper = styled(Paper)({
 });
 
 const CustomButton = styled(Button)({
-  //backgroundColor: "#13dfae",
-  backgroundColor: "#10c79d",
+  backgroundColor: "#0ead87", // Primary teal-green
   color: "#fff",
   "&:hover": {
-    backgroundColor: "#10c79d",
+    backgroundColor: "#0c8a6a", // Slightly darker teal-green on hover
   },
   borderRadius: "8px",
   padding: "10px 20px",
   fontSize: "16px",
   textTransform: "none",
+  width: "100%", // Full width
+});
+
+const RecentActivityItem = styled(ListItem)({
+  transition: "background-color 0.2s",
+  "&:hover": {
+    backgroundColor: "#f5f5f5", // Light gray on hover
+  },
 });
 
 const Dashboard = () => {
   const [anchorEl, setAnchorEl] = useState(null); // For the menu dropdown
   const [selectedWeek, setSelectedWeek] = useState("thisWeek"); // For week selection
+  const [userName, setUserName] = useState(""); // State to store the user's name
+  const [balance, setBalance] = useState(0); // State to store the user's balance
   const open = Boolean(anchorEl);
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Get the current authenticated user
+        const { data: user, error: authError } = await supabase.auth.getUser();
+
+        if (authError) {
+          throw authError;
+        }
+
+        // Fetch user data from the `profiles` table
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("first_name, balance") // Include the balance field
+          .eq("id", user.user.id) // Match the user's ID
+          .single(); // Return a single record
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        // Set the user's name and balance
+        setUserName(profile.first_name || "Guest");
+        setBalance(profile.balance || 0); // Set the balance (default to 0 if not available)
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        setUserName("Guest"); // Fallback to "Guest" if the request fails
+        setBalance(0); // Fallback to 0 if the request fails
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Handle logout
+  const handleLogout = async () => {
+    await logout(); // Call the logout function
+  };
 
   // Sample data for the bar chart (for different weeks)
   const weeklyData = {
@@ -115,21 +176,25 @@ const Dashboard = () => {
       icon: <SportsSoccer />,
       primary: "Bet placed on Soccer Match",
       secondary: "2 hours ago",
+      link: "/soccer-bet",
     },
     {
       icon: <MonetizationOn />,
       primary: "Deposit of $500",
       secondary: "5 hours ago",
+      link: "/deposit",
     },
     {
       icon: <TrendingUp />,
       primary: "Won $200 on Tennis",
       secondary: "1 day ago",
+      link: "/tennis-win",
     },
     {
       icon: <Notifications />,
       primary: "New promotion available",
       secondary: "2 days ago",
+      link: "/promotions",
     },
   ];
 
@@ -150,7 +215,7 @@ const Dashboard = () => {
   return (
     <Box sx={{ flexGrow: 1, backgroundColor: "#f5f5f5", paddingTop: "64px" }}>
       {/* Header */}
-      <AppBar position="fixed" sx={{ backgroundColor: "#10c79d" }}>
+      <AppBar position="fixed" sx={{ backgroundColor: "#0ead87" }}>
         <Toolbar>
           {/* Hamburger Menu (only on small screens) */}
           <IconButton
@@ -164,10 +229,17 @@ const Dashboard = () => {
             <MenuIcon />
           </IconButton>
 
-          {/* Title (moved to the left) */}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, textAlign: "left" }}>
-            BundlesBets AI Dashboard
-          </Typography>
+          {/* Image and Title */}
+          <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+            <img
+              src="/images/BundlesBetsLogo.png" // Replace with your image path
+              alt="Logo"
+              style={{ width: "40px", height: "40px", marginRight: "12px" }}
+            />
+            <Typography variant="h6" component="div" sx={{ textAlign: "left" }} fontWeight={600}>
+              BundlesBets AI Dashboard
+            </Typography>
+          </Box>
 
           {/* Navigation Links (only on larger screens) */}
           <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 2 }}>
@@ -189,11 +261,13 @@ const Dashboard = () => {
           </Box>
 
           {/* Logout Link with Text */}
-          <Link href="/logout" color="inherit" underline="none">
-            <Button color="inherit" startIcon={<ExitToApp sx={{ color: "#FFD700" }} />}>
-              Logout
-            </Button>
-          </Link>
+          <Button
+            color="inherit"
+            startIcon={<ExitToApp sx={{ color: "#FFD700" }} />}
+            onClick={handleLogout} // Call handleLogout on click
+          >
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
 
@@ -231,32 +305,34 @@ const Dashboard = () => {
       {/* Dashboard Content */}
       <Box sx={{ p: 4 }}>
         <Typography variant="h4" fontWeight="bold" mb={4} color="#222">
-          Welcome Back, Bonam JR!
+          Welcome Back, {userName || "Guest"}!
         </Typography>
 
         {/* Quick Stats Section */}
         <Grid container spacing={4} mb={4}>
           {[
-            { title: "Total Balance", value: "$2,500", icon: <AccountBalanceWallet /> },
-            { title: "Total Bets", value: "120", icon: <MonetizationOn /> },
-            { title: "Total Wins", value: "80", icon: <TrendingUp /> },
-            { title: "Notifications", value: "3 New", icon: <Notifications /> },
+            { title: "Total Balance", value: `$${balance.toFixed(2)}`, icon: <AccountBalanceWallet />, link: "/balance" },
+            { title: "Total Bets", value: "120", icon: <MonetizationOn />, link: "/bets" },
+            { title: "Total Wins", value: "80", icon: <TrendingUp />, link: "/wins" },
+            { title: "Notifications", value: "3 New", icon: <Notifications />, link: "/notifications" },
           ].map((stat, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <motion.div whileHover={{ scale: 1.05 }}>
-                <DashboardPaper>
-                  <Box display="flex" alignItems="center">
-                    <Avatar sx={{ bgcolor: "#13dfae", mr: 2 }}>
-                      {stat.icon}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6">{stat.title}</Typography>
-                      <Typography variant="h5" fontWeight="bold">
-                        {stat.value}
-                      </Typography>
+                <Link href={stat.link} underline="none">
+                  <DashboardPaper>
+                    <Box display="flex" alignItems="center">
+                      <Avatar sx={{ bgcolor: "#0c8a6a", mr: 2 }}>
+                        {stat.icon}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h6">{stat.title}</Typography>
+                        <Typography variant="h5" fontWeight="bold">
+                          {stat.value}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                </DashboardPaper>
+                  </DashboardPaper>
+                </Link>
               </motion.div>
             </Grid>
           ))}
@@ -292,8 +368,8 @@ const Dashboard = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="bets" fill="#13dfae" name="Total Bets" />
-                    <Bar dataKey="wins" fill="#10c79d" name="Total Wins" />
+                    <Bar dataKey="bets" fill="#0ead87" name="Total Bets" />
+                    <Bar dataKey="wins" fill="#FFD700" name="Total Wins" />
                   </BarChart>
                 </ResponsiveContainer>
               </DashboardPaper>
@@ -302,15 +378,15 @@ const Dashboard = () => {
           <Grid item xs={12} md={4}>
             <motion.div whileHover={{ scale: 1.02 }}>
               <DashboardPaper>
-                <Typography variant="h6" fontWeight="bold" mb={2}>
+                <Typography variant="h6" fontWeight="bold" mb={2} textAlign="left">
                   Quick Actions
                 </Typography>
                 <Box display="flex" flexDirection="column" gap={2}>
-                  <CustomButton fullWidth>Place a Bet</CustomButton>
-                  <CustomButton fullWidth>Recent Bets</CustomButton>
-                  <CustomButton fullWidth>Deposit Funds</CustomButton>
-                  <CustomButton fullWidth>Withdraw Funds</CustomButton>
-                  <CustomButton fullWidth>View Promotions</CustomButton>
+                  <CustomButton startIcon={<AddCircleOutline />}>Place a Bet</CustomButton>
+                  <CustomButton startIcon={<History />}>Recent Bets</CustomButton>
+                  <CustomButton startIcon={<AccountBalance />}>Deposit Funds</CustomButton>
+                  <CustomButton startIcon={<LocalAtm />}>Withdraw Funds</CustomButton>
+                  <CustomButton startIcon={<Redeem />}>View Promotions</CustomButton>
                 </Box>
               </DashboardPaper>
             </motion.div>
@@ -328,15 +404,19 @@ const Dashboard = () => {
                 <List>
                   {recentActivity.map((activity, index) => (
                     <React.Fragment key={index}>
-                      <ListItem alignItems="flex-start">
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: "#13dfae" }}>{activity.icon}</Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={activity.primary}
-                          secondary={activity.secondary}
-                        />
-                      </ListItem>
+                      <Link href={activity.link} underline="none">
+                        <RecentActivityItem alignItems="flex-start" sx={{ cursor: "pointer" }}>
+                          <ListItemAvatar>
+                            <Avatar sx={{ bgcolor: "#FFD700" }}>{activity.icon}</Avatar>
+                          </ListItemAvatar>
+                          <ListItemText
+                            primary={activity.primary}
+                            secondary={activity.secondary}
+                            primaryTypographyProps={{ color: "#333" }}
+                            secondaryTypographyProps={{ color: "#666" }}
+                          />
+                        </RecentActivityItem>
+                      </Link>
                       {index < recentActivity.length - 1 && <Divider variant="inset" component="li" />}
                     </React.Fragment>
                   ))}

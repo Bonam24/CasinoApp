@@ -1,6 +1,5 @@
-'use client'; // Mark this component as a Client Component
-
-import React, { useState } from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -18,7 +17,14 @@ import {
 import { styled } from "@mui/system";
 import { motion } from "framer-motion";
 import { Visibility, VisibilityOff } from "@mui/icons-material"; // Import icons for show/hide password
-import { login, signup } from "./action"; // Import server actions
+import { createClient } from "@supabase/supabase-js"; // Import Supabase client
+import { useRouter } from "next/navigation"; // Import useRouter from Next.js
+import SuccessModal from "./loginComponents/successModal"; // Import the SuccessModal component
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CustomButton = styled(Button)({
   backgroundColor: "#13dfae",
@@ -60,7 +66,6 @@ const Login = () => {
     firstName: "",
     lastName: "",
     email: "",
-    phone: "",
     country: "USA",
     dob: "",
     password: "",
@@ -70,15 +75,42 @@ const Login = () => {
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
   const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State to toggle confirm password visibility
+  const [countries, setCountries] = useState([]); // State to store the list of countries
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+
+  const router = useRouter(); // Initialize the router
 
   const today = new Date().toISOString().split("T")[0];
   const minDate = new Date();
   minDate.setFullYear(minDate.getFullYear() - 18);
   const minDOB = minDate.toISOString().split("T")[0];
 
+  // Fetch the list of countries from the API
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch("https://restcountries.com/v3.1/all");
+        const data = await response.json();
+        // Map and sort countries alphabetically by name
+        const countryList = data
+          .map((country) => ({
+            name: country.name.common,
+            code: country.cca2,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+        setCountries(countryList);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(`Updating ${name} to ${value}`); // Debugging
     setFormData({ ...formData, [name]: value });
   };
 
@@ -88,15 +120,25 @@ const Login = () => {
     setLoading(true);
     setMessage("");
 
-    const formData = new FormData(e.target);
-    const { error } = await login(formData);
+    // Validate email and password
+    if (!formData.email || !formData.password) {
+      setMessage("Please provide both email and password.");
+      setLoading(false);
+      return;
+    }
+
+    // Call Supabase for authentication
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
 
     if (error) {
       setMessage(error.message);
       setLoading(false);
     } else {
       setMessage("Login successful! Redirecting...");
-      // Redirect is handled in the server action
+      router.push("/differentPages/dashboard"); // Redirect to the dashboard
     }
   };
 
@@ -111,7 +153,6 @@ const Login = () => {
       !formData.firstName ||
       !formData.lastName ||
       !formData.email ||
-      !formData.phone ||
       !formData.dob ||
       !formData.password
     ) {
@@ -126,21 +167,41 @@ const Login = () => {
       return;
     }
 
-    const formDataObj = new FormData();
-    formDataObj.append("email", formData.email);
-    formDataObj.append("password", formData.password);
+    // Sign up the user with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+    });
 
-    const { error } = await signup(formDataObj);
+    if (authError) {
+      setMessage(authError.message);
+      setLoading(false);
+      return;
+    }
 
-    if (error) {
-      setMessage(error.message);
+    // Insert additional user information into the profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .insert([
+        {
+          id: authData.user.id, // Use the user ID from the auth response
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          country: formData.country,
+          dob: formData.dob,
+          balance: 0.00, // Set the balance to 0 upon signup
+        },
+      ]);
+
+    if (profileError) {
+      setMessage(profileError.message);
     } else {
-      setMessage("Registration successful! ✅");
+      setIsModalOpen(true); // Open the success modal
       setFormData({
         firstName: "",
         lastName: "",
         email: "",
-        phone: "",
         country: "USA",
         dob: "",
         password: "",
@@ -151,28 +212,18 @@ const Login = () => {
     setLoading(false);
   };
 
-  // Get country code and flag based on selected country
-  const getCountryCodeAndFlag = () => {
-    switch (formData.country) {
-      case "USA":
-        return { code: "+1", flag: "🇺🇸" };
-      case "Canada":
-        return { code: "+1", flag: "🇨🇦" };
-      case "Mexico":
-        return { code: "+52", flag: "🇲🇽" };
-      default:
-        return { code: "", flag: "" };
-    }
-  };
-
-  const { code, flag } = getCountryCodeAndFlag();
-
   // Toggle password visibility
   const handleClickShowPassword = () => setShowPassword((show) => !show);
   const handleClickShowConfirmPassword = () => setShowConfirmPassword((show) => !show);
 
   // Check if passwords match
   const passwordsMatch = formData.password === formData.confirmPassword;
+
+  // Function to handle redirection to the login tab
+  const handleRedirectToLogin = () => {
+    setIsModalOpen(false); // Close the modal
+    setTab(0); // Switch to the Sign In tab
+  };
 
   return (
     <Box
@@ -212,6 +263,8 @@ const Login = () => {
                 fullWidth
                 label="Email"
                 name="email"
+                value={formData.email} // Bind to formData.email
+                onChange={handleChange} // Update formData on change
                 margin="normal"
                 variant="outlined"
                 required
@@ -221,6 +274,8 @@ const Login = () => {
                 label="Password"
                 name="password"
                 type={showPassword ? "text" : "password"}
+                value={formData.password} // Bind to formData.password
+                onChange={handleChange} // Update formData on change
                 margin="normal"
                 variant="outlined"
                 required
@@ -276,31 +331,12 @@ const Login = () => {
                     variant="outlined"
                     required
                   >
-                    <MenuItem value="USA"> USA</MenuItem>
-                    <MenuItem value="Canada"> Canada</MenuItem>
-                    <MenuItem value="Mexico"> Mexico</MenuItem>
+                    {countries.map((country) => (
+                      <MenuItem key={country.code} value={country.name}>
+                        {country.name}
+                      </MenuItem>
+                    ))}
                   </TextField>
-                </Grid>
-                {/* Phone Field */}
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Phone Number"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    margin="normal"
-                    variant="outlined"
-                    required
-                    placeholder="123-456-7890"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          {code}
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
                 </Grid>
                 {/* Date of Birth Field */}
                 <Grid item xs={12} sm={6}>
@@ -382,6 +418,13 @@ const Login = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Success Modal */}
+      <SuccessModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)} // Close the modal
+        onRedirect={handleRedirectToLogin} // Pass the redirection callback
+      />
     </Box>
   );
 };
