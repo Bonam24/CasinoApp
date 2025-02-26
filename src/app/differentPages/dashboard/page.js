@@ -61,8 +61,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Custom styled components
 const DashboardPaper = styled(Paper)({
-  padding: "24px",
-  borderRadius: "16px",
+  padding: "16px",
+  borderRadius: "12px",
   boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
   backgroundColor: "#ffffff",
   transition: "transform 0.2s, box-shadow 0.2s",
@@ -217,18 +217,6 @@ const Dashboard = () => {
       {/* Header */}
       <AppBar position="fixed" sx={{ backgroundColor: "#0ead87" }}>
         <Toolbar>
-          {/* Hamburger Menu (only on small screens) */}
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={handleMenu}
-            sx={{ display: { xs: "block", sm: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
-
           {/* Image and Title */}
           <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
             <img
@@ -236,10 +224,26 @@ const Dashboard = () => {
               alt="Logo"
               style={{ width: "40px", height: "40px", marginRight: "12px" }}
             />
-            <Typography variant="h6" component="div" sx={{ textAlign: "left" }} fontWeight={600}>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ textAlign: "left", fontWeight: 600, fontSize: { xs: "1rem", sm: "1.25rem" } }} // Responsive font size
+            >
               BundlesBets AI Dashboard
             </Typography>
           </Box>
+
+          {/* Hamburger Menu (only on small screens) */}
+          <IconButton
+            size="large"
+            edge="end"
+            color="inherit"
+            aria-label="menu"
+            onClick={handleMenu}
+            sx={{ display: { xs: "block", sm: "none" }, ml: "auto" }}
+          >
+            <MenuIcon />
+          </IconButton>
 
           {/* Navigation Links (only on larger screens) */}
           <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 2 }}>
@@ -258,16 +262,15 @@ const Dashboard = () => {
                 Leaderboard
               </Button>
             </Link>
+            {/* Logout Button (only on larger screens) */}
+            <Button
+              color="inherit"
+              startIcon={<ExitToApp sx={{ color: "#FFD700" }} />}
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
           </Box>
-
-          {/* Logout Link with Text */}
-          <Button
-            color="inherit"
-            startIcon={<ExitToApp sx={{ color: "#FFD700" }} />}
-            onClick={handleLogout} // Call handleLogout on click
-          >
-            Logout
-          </Button>
         </Toolbar>
       </AppBar>
 
@@ -277,12 +280,12 @@ const Dashboard = () => {
         anchorEl={anchorEl}
         anchorOrigin={{
           vertical: "top",
-          horizontal: "left",
+          horizontal: "right",
         }}
         keepMounted
         transformOrigin={{
           vertical: "top",
-          horizontal: "left",
+          horizontal: "right",
         }}
         open={open}
         onClose={handleClose}
@@ -300,23 +303,34 @@ const Dashboard = () => {
           <EmojiEvents sx={{ mr: 2, color: "#FFD700" }} />
           Leaderboard
         </MenuItem>
+        <MenuItem onClick={handleLogout}>
+          <ExitToApp sx={{ mr: 2, color: "#FFD700" }} />
+          Logout
+        </MenuItem>
       </Menu>
 
       {/* Dashboard Content */}
-      <Box sx={{ p: 4 }}>
-        <Typography variant="h4" fontWeight="bold" mb={4} color="#222">
+      <Box sx={{ p: { xs: 2, sm: 4 } }}>
+        {/* Welcome Message */}
+        <Typography
+          variant="h4"
+          fontWeight="bold"
+          mb={4}
+          color="#222"
+          sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }} // Responsive font size
+        >
           Welcome Back, {userName || "Guest"}!
         </Typography>
 
         {/* Quick Stats Section */}
-        <Grid container spacing={4} mb={4}>
+        <Grid container spacing={2} mb={4}>
           {[
             { title: "Total Balance", value: `$${balance.toFixed(2)}`, icon: <AccountBalanceWallet />, link: "/balance" },
             { title: "Total Bets", value: "120", icon: <MonetizationOn />, link: "/bets" },
             { title: "Total Wins", value: "80", icon: <TrendingUp />, link: "/wins" },
             { title: "Notifications", value: "3 New", icon: <Notifications />, link: "/notifications" },
           ].map((stat, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+            <Grid item xs={6} sm={6} md={3} key={index}>
               <motion.div whileHover={{ scale: 1.05 }}>
                 <Link href={stat.link} underline="none">
                   <DashboardPaper>
@@ -325,8 +339,17 @@ const Dashboard = () => {
                         {stat.icon}
                       </Avatar>
                       <Box>
-                        <Typography variant="h6">{stat.title}</Typography>
-                        <Typography variant="h5" fontWeight="bold">
+                        <Typography
+                          variant="h6"
+                          sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }} // Responsive font size
+                        >
+                          {stat.title}
+                        </Typography>
+                        <Typography
+                          variant="h5"
+                          fontWeight="bold"
+                          sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }} // Responsive font size
+                        >
                           {stat.value}
                         </Typography>
                       </Box>
@@ -339,7 +362,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Charts Section */}
-        <Grid container spacing={4} mb={4}>
+        <Grid container spacing={2} mb={4}>
           <Grid item xs={12} md={8}>
             <motion.div whileHover={{ scale: 1.02 }}>
               <DashboardPaper>
@@ -394,7 +417,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Recent Activity Section */}
-        <Grid container spacing={4}>
+        <Grid container spacing={2}>
           <Grid item xs={12}>
             <motion.div whileHover={{ scale: 1.02 }}>
               <DashboardPaper>
