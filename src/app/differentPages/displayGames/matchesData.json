@@ -1,0 +1,382 @@
+[
+  {
+    "id": 1,
+    "team1": {
+      "name": "Los Angeles Lakers",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["LeBron James", "Anthony Davis", "Russell Westbrook", "Carmelo Anthony", "Dwight Howard"]
+    },
+    "team2": {
+      "name": "Golden State Warriors",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Stephen Curry", "Klay Thompson", "Draymond Green", "Andrew Wiggins", "James Wiseman"]
+    },
+    "date": "2025-10-25T19:00:00Z",
+    "odds": {
+      "team1": 1.8,
+      "draw": 3.2,
+      "team2": 2.1
+    }
+  },
+  {
+    "id": 2,
+    "team1": {
+      "name": "Boston Celtics",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Jayson Tatum", "Jaylen Brown", "Marcus Smart", "Al Horford", "Robert Williams"]
+    },
+    "team2": {
+      "name": "Miami Heat",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Jimmy Butler", "Bam Adebayo", "Kyle Lowry", "Tyler Herro", "Duncan Robinson"]
+    },
+    "date": "2025-10-26T20:00:00Z",
+    "odds": {
+      "team1": 2.0,
+      "draw": 3.5,
+      "team2": 1.9
+    }
+  },
+  {
+    "id": 3,
+    "team1": {
+      "name": "Chicago Bulls",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["DeMar DeRozan", "Zach LaVine", "Nikola Vucevic", "Lonzo Ball", "Alex Caruso"]
+    },
+    "team2": {
+      "name": "Brooklyn Nets",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Kevin Durant", "Kyrie Irving", "Ben Simmons", "Joe Harris", "Patty Mills"]
+    },
+    "date": "2025-10-24T18:00:00Z",
+    "odds": {
+      "team1": 1.7,
+      "draw": 3.0,
+      "team2": 2.3
+    }
+  },
+  {
+    "id": 4,
+    "team1": {
+      "name": "Phoenix Suns",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Devin Booker", "Chris Paul", "Deandre Ayton", "Mikal Bridges", "Jae Crowder"]
+    },
+    "team2": {
+      "name": "Denver Nuggets",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Nikola Jokic", "Jamal Murray", "Michael Porter Jr.", "Aaron Gordon", "Monte Morris"]
+    },
+    "date": "2025-10-27T21:00:00Z",
+    "odds": {
+      "team1": 1.9,
+      "draw": 3.3,
+      "team2": 2.0
+    }
+  },
+  {
+    "id": 5,
+    "team1": {
+      "name": "Toronto Raptors",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Pascal Siakam", "Fred VanVleet", "OG Anunoby", "Scottie Barnes", "Gary Trent Jr."]
+    },
+    "team2": {
+      "name": "Milwaukee Bucks",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Giannis Antetokounmpo", "Khris Middleton", "Jrue Holiday", "Brook Lopez", "Bobby Portis"]
+    },
+    "date": "2025-10-28T19:30:00Z",
+    "odds": {
+      "team1": 2.2,
+      "draw": 3.4,
+      "team2": 1.8
+    }
+  },
+  {
+    "id": 6,
+    "team1": {
+      "name": "Houston Rockets",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Jalen Green", "Kevin Porter Jr.", "Christian Wood", "Jae'Sean Tate", "Alperen Sengun"]
+    },
+    "team2": {
+      "name": "Dallas Mavericks",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Luka Doncic", "Kristaps Porzingis", "Tim Hardaway Jr.", "Jalen Brunson", "Dorian Finney-Smith"]
+    },
+    "date": "2025-10-29T20:00:00Z",
+    "odds": {
+      "team1": 2.1,
+      "draw": 3.1,
+      "team2": 1.9
+    }
+  },
+  {
+    "id": 7,
+    "team1": {
+      "name": "Atlanta Hawks",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Trae Young", "John Collins", "De'Andre Hunter", "Clint Capela", "Bogdan Bogdanovic"]
+    },
+    "team2": {
+      "name": "Orlando Magic",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Cole Anthony", "Jalen Suggs", "Franz Wagner", "Wendell Carter Jr.", "Mo Bamba"]
+    },
+    "date": "2025-10-30T18:00:00Z",
+    "odds": {
+      "team1": 1.6,
+      "draw": 3.6,
+      "team2": 2.4
+    }
+  },
+  {
+    "id": 8,
+    "team1": {
+      "name": "Utah Jazz",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Donovan Mitchell", "Rudy Gobert", "Mike Conley", "Bojan Bogdanovic", "Jordan Clarkson"]
+    },
+    "team2": {
+      "name": "Portland Trail Blazers",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Damian Lillard", "CJ McCollum", "Jusuf Nurkic", "Norman Powell", "Robert Covington"]
+    },
+    "date": "2025-10-31T21:00:00Z",
+    "odds": {
+      "team1": 1.8,
+      "draw": 3.2,
+      "team2": 2.2
+    }
+  },
+  {
+    "id": 9,
+    "team1": {
+      "name": "New York Knicks",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Julius Randle", "RJ Barrett", "Evan Fournier", "Mitchell Robinson", "Derrick Rose"]
+    },
+    "team2": {
+      "name": "Philadelphia 76ers",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Joel Embiid", "Ben Simmons", "Tobias Harris", "Tyrese Maxey", "Seth Curry"]
+    },
+    "date": "2025-11-01T19:00:00Z",
+    "odds": {
+      "team1": 2.0,
+      "draw": 3.3,
+      "team2": 1.9
+    }
+  },
+  {
+    "id": 10,
+    "team1": {
+      "name": "Memphis Grizzlies",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Ja Morant", "Jaren Jackson Jr.", "Dillon Brooks", "Steven Adams", "Desmond Bane"]
+    },
+    "team2": {
+      "name": "Minnesota Timberwolves",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Karl-Anthony Towns", "Anthony Edwards", "D'Angelo Russell", "Jaden McDaniels", "Malik Beasley"]
+    },
+    "date": "2025-11-02T20:00:00Z",
+    "odds": {
+      "team1": 1.9,
+      "draw": 3.4,
+      "team2": 2.0
+    }
+  },
+  {
+    "id": 11,
+    "team1": {
+      "name": "Indiana Pacers",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Domantas Sabonis", "Malcolm Brogdon", "Caris LeVert", "Myles Turner", "Chris Duarte"]
+    },
+    "team2": {
+      "name": "Cleveland Cavaliers",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Darius Garland", "Evan Mobley", "Jarrett Allen", "Collin Sexton", "Ricky Rubio"]
+    },
+    "date": "2025-11-03T18:00:00Z",
+    "odds": {
+      "team1": 2.1,
+      "draw": 3.5,
+      "team2": 1.8
+    }
+  },
+  {
+    "id": 12,
+    "team1": {
+      "name": "Sacramento Kings",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["De'Aaron Fox", "Tyrese Haliburton", "Harrison Barnes", "Richaun Holmes", "Buddy Hield"]
+    },
+    "team2": {
+      "name": "San Antonio Spurs",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Dejounte Murray", "Keldon Johnson", "Jakob Poeltl", "Derrick White", "Lonnie Walker IV"]
+    },
+    "date": "2025-11-04T19:30:00Z",
+    "odds": {
+      "team1": 1.7,
+      "draw": 3.2,
+      "team2": 2.3
+    }
+  },
+  {
+    "id": 13,
+    "team1": {
+      "name": "Washington Wizards",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Bradley Beal", "Spencer Dinwiddie", "Kyle Kuzma", "Montrezl Harrell", "Daniel Gafford"]
+    },
+    "team2": {
+      "name": "Charlotte Hornets",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["LaMelo Ball", "Miles Bridges", "Gordon Hayward", "Terry Rozier", "PJ Washington"]
+    },
+    "date": "2025-11-05T20:00:00Z",
+    "odds": {
+      "team1": 1.8,
+      "draw": 3.3,
+      "team2": 2.1
+    }
+  },
+  {
+    "id": 14,
+    "team1": {
+      "name": "Detroit Pistons",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Cade Cunningham", "Jerami Grant", "Saddiq Bey", "Isaiah Stewart", "Killian Hayes"]
+    },
+    "team2": {
+      "name": "Oklahoma City Thunder",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Shai Gilgeous-Alexander", "Josh Giddey", "Luguentz Dort", "Darius Bazley", "Aleksej Pokusevski"]
+    },
+    "date": "2025-11-06T18:00:00Z",
+    "odds": {
+      "team1": 2.0,
+      "draw": 3.4,
+      "team2": 1.9
+    }
+  },
+  {
+    "id": 15,
+    "team1": {
+      "name": "New Orleans Pelicans",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Zion Williamson", "Brandon Ingram", "Jonas Valanciunas", "Devonte' Graham", "Josh Hart"]
+    },
+    "team2": {
+      "name": "Los Angeles Clippers",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Paul George", "Kawhi Leonard", "Reggie Jackson", "Marcus Morris Sr.", "Ivica Zubac"]
+    },
+    "date": "2025-11-07T21:00:00Z",
+    "odds": {
+      "team1": 1.9,
+      "draw": 3.2,
+      "team2": 2.0
+    }
+  },
+  {
+    "id": 16,
+    "team1": {
+      "name": "Golden State Warriors",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Stephen Curry", "Klay Thompson", "Draymond Green", "Andrew Wiggins", "James Wiseman"]
+    },
+    "team2": {
+      "name": "Phoenix Suns",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Devin Booker", "Chris Paul", "Deandre Ayton", "Mikal Bridges", "Jae Crowder"]
+    },
+    "date": "2025-11-08T19:00:00Z",
+    "odds": {
+      "team1": 2.1,
+      "draw": 3.5,
+      "team2": 1.8
+    }
+  },
+  {
+    "id": 17,
+    "team1": {
+      "name": "Brooklyn Nets",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Kevin Durant", "Kyrie Irving", "Ben Simmons", "Joe Harris", "Patty Mills"]
+    },
+    "team2": {
+      "name": "Boston Celtics",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Jayson Tatum", "Jaylen Brown", "Marcus Smart", "Al Horford", "Robert Williams"]
+    },
+    "date": "2025-11-09T20:00:00Z",
+    "odds": {
+      "team1": 1.7,
+      "draw": 3.1,
+      "team2": 2.2
+    }
+  },
+  {
+    "id": 18,
+    "team1": {
+      "name": "Miami Heat",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Jimmy Butler", "Bam Adebayo", "Kyle Lowry", "Tyler Herro", "Duncan Robinson"]
+    },
+    "team2": {
+      "name": "Atlanta Hawks",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Trae Young", "John Collins", "De'Andre Hunter", "Clint Capela", "Bogdan Bogdanovic"]
+    },
+    "date": "2025-11-10T18:00:00Z",
+    "odds": {
+      "team1": 1.8,
+      "draw": 3.3,
+      "team2": 2.1
+    }
+  },
+  {
+    "id": 19,
+    "team1": {
+      "name": "Denver Nuggets",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Nikola Jokic", "Jamal Murray", "Michael Porter Jr.", "Aaron Gordon", "Monte Morris"]
+    },
+    "team2": {
+      "name": "Utah Jazz",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Donovan Mitchell", "Rudy Gobert", "Mike Conley", "Bojan Bogdanovic", "Jordan Clarkson"]
+    },
+    "date": "2025-11-11T19:30:00Z",
+    "odds": {
+      "team1": 2.0,
+      "draw": 3.4,
+      "team2": 1.9
+    }
+  },
+  {
+    "id": 20,
+    "team1": {
+      "name": "Los Angeles Clippers",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Paul George", "Kawhi Leonard", "Reggie Jackson", "Marcus Morris Sr.", "Ivica Zubac"]
+    },
+    "team2": {
+      "name": "Memphis Grizzlies",
+      "logo": "https://via.placeholder.com/50",
+      "players": ["Ja Morant", "Jaren Jackson Jr.", "Dillon Brooks", "Steven Adams", "Desmond Bane"]
+    },
+    "date": "2025-11-12T20:00:00Z",
+    "odds": {
+      "team1": 1.9,
+      "draw": 3.2,
+      "team2": 2.0
+    }
+  }
+]

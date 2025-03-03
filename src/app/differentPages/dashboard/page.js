@@ -405,7 +405,7 @@ const Dashboard = () => {
                   Quick Actions
                 </Typography>
                 <Box display="flex" flexDirection="column" gap={2}>
-                  <CustomButton startIcon={<AddCircleOutline />}>Place a Bet</CustomButton>
+                  <CustomButton startIcon={<AddCircleOutline />} href="/differentPages/displayGames">Place a Bet</CustomButton>
                   <CustomButton startIcon={<History />}>Recent Bets</CustomButton>
                   <CustomButton startIcon={<AccountBalance />}>Deposit Funds</CustomButton>
                   <CustomButton startIcon={<LocalAtm />}>Withdraw Funds</CustomButton>
