@@ -24,7 +24,7 @@ import {
 import { styled } from "@mui/system";
 import { Close as CloseIcon } from "@mui/icons-material";
 import matchesData from "./matchesData.json";
-import QRCode from "react-qr-code";
+import QRCode from "qrcode"; // Import qrcode library
  // For generating QR codes
 import { jsPDF } from "jspdf"; // For generating PDFs
 
@@ -136,35 +136,89 @@ const MatchesTable = () => {
   };
 
   // Generate and download PDF ticket
-  const generateTicket = () => {
+
+  const generateTicket = async () => {
     const doc = new jsPDF();
-
-    // Add ticket title
+  
+    // Constants for styling
+    const primaryColor = [19, 223, 174]; // #13dfae in RGB
+    const secondaryColor = [0, 0, 0]; // Black
+    const watermarkOpacity = 0.05; // 5% opacity for watermark (very faint)
+    const padding = 10; // Padding for content
+    const pageWidth = doc.internal.pageSize.getWidth(); // Get page width
+    const pageHeight = doc.internal.pageSize.getHeight(); // Get page height
+  
+    // Add a border around the ticket
+    doc.setDrawColor(...primaryColor); // Set border color to #13dfae
+    doc.setLineWidth(0.5); // Thin border
+    doc.rect(padding, padding, pageWidth - 2 * padding, pageHeight - 2 * padding); // Draw border
+  
+    // Add a faint watermark
+    doc.setFontSize(40);
+    doc.setTextColor(...primaryColor, watermarkOpacity * 255); // Set watermark color with opacity
+    doc.setFont("helvetica", "bold");
+    doc.text("BundleBets", pageWidth / 2, pageHeight / 2, {
+      angle: 45,
+      align: "center",
+      baseline: "middle",
+    });
+  
+    // Reset text color and font for content
+    doc.setTextColor(...secondaryColor);
+    doc.setFont("helvetica", "normal");
+  
+    // Add header with logo and title
     doc.setFontSize(18);
-    doc.text("Betting Ticket", 10, 20);
-
-    // Add date
+    doc.setFont("helvetica", "bold");
+    doc.text("Betting Ticket", pageWidth / 2, padding + 15, { align: "center" });
+  
+    // Add a divider line under the header
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(padding, padding + 20, pageWidth - padding, padding + 20);
+  
+    // Add date and time
     doc.setFontSize(12);
-    doc.text(`Date: ${format(new Date(), "yyyy-MM-dd HH:mm")}`, 10, 30);
-
+    doc.setFont("helvetica", "normal");
+    doc.text(`Date: ${format(new Date(), "yyyy-MM-dd HH:mm")}`, padding, padding + 30);
+  
+    // Add a divider line below the date
+    doc.text("---------------", padding, padding + 35);
+  
     // Add bet amount
-    doc.text(`Bet Amount: $${betAmount}`, 10, 40);
-
+    doc.text(`Bet Amount: $${betAmount}`, padding, padding + 45);
+  
+    // Add a divider line below the bet amount
+    doc.text("---------------", padding, padding + 50);
+  
     // Add potential winnings
-    doc.text(`Potential Winnings: $${calculateExpectedReturns()}`, 10, 50);
-
+    doc.text(`Potential Winnings: $${calculateExpectedReturns()}`, padding, padding + 60);
+  
+    // Add a divider line below the potential winnings
+    doc.text("---------------", padding, padding + 65);
+  
+    // Add a section header for selected matches
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Selected Matches", padding, padding + 75);
+  
+    // Add a divider line below the selected matches header
+    doc.text("---------------", padding, padding + 80);
+  
     // Add selected matches
-    let yPos = 60;
+    let yPos = padding + 85;
     Object.entries(selectedMatches).forEach(([matchId, { option, odds, match }]) => {
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
       doc.text(
-        `Match: ${match.team1.name} vs ${match.team2.name} - ${option} (Odds: ${odds})`,
-        10,
+        `• ${match.team1.name} vs ${match.team2.name} - ${option} (Odds: ${odds})`,
+        padding,
         yPos
       );
       yPos += 10;
     });
-
-    // Add QR code
+  
+    // Add a QR code for verification
     const qrCodeData = JSON.stringify({
       date: format(new Date(), "yyyy-MM-dd HH:mm"),
       betAmount,
@@ -175,35 +229,52 @@ const MatchesTable = () => {
         odds,
       })),
     });
-
-    const qrCodeElement = document.createElement("div");
-    QRCode.toCanvas(qrCodeElement, qrCodeData, { width: 100 }, (error) => {
-      if (error) console.error(error);
-      else {
-        const qrCodeImage = qrCodeElement.toDataURL("image/png");
-        doc.addImage(qrCodeImage, "PNG", 10, yPos + 10, 50, 50);
-      }
-    });
-
+  
+    // Generate QR code on a canvas
+    const canvas = document.createElement("canvas");
+    await QRCode.toCanvas(canvas, qrCodeData, { width: 100 });
+  
+    // Convert canvas to image and add to PDF
+    const qrCodeImage = canvas.toDataURL("image/png");
+    const qrCodeWidth = 50;
+    const qrCodeHeight = 50;
+    doc.addImage(
+      qrCodeImage,
+      "PNG",
+      pageWidth - padding - qrCodeWidth,
+      pageHeight - padding - qrCodeHeight,
+      qrCodeWidth,
+      qrCodeHeight
+    );
+  
+    // Add footer text
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    doc.text(
+      "Thank you for using BundleBets!",
+      pageWidth / 2,
+      pageHeight - padding - qrCodeHeight - 10,
+      { align: "center" }
+    );
+  
     // Save the PDF
     doc.save("betting_ticket.pdf");
   };
+// Handle placing a bet
+const handlePlaceBet = async () => {
+  console.log("Placing bet:", {
+    selectedMatches,
+    betAmount,
+    expectedReturns: calculateExpectedReturns(),
+  });
 
-  // Handle placing a bet
-  const handlePlaceBet = () => {
-    console.log("Placing bet:", {
-      selectedMatches,
-      betAmount,
-      expectedReturns: calculateExpectedReturns(),
-    });
+  // Generate and download the ticket
+  await generateTicket();
 
-    // Generate and download the ticket
-    generateTicket();
-
-    // Reset selected matches and bet amount
-    setSelectedMatches({});
-    setBetAmount("");
-  };
+  // Reset selected matches and bet amount
+  setSelectedMatches({});
+  setBetAmount("");
+};
 
   // Handle canceling the bet
   const handleCancel = () => {
