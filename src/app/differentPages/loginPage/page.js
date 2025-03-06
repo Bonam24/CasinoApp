@@ -17,14 +17,10 @@ import {
 import { styled } from "@mui/system";
 import { motion } from "framer-motion";
 import { Visibility, VisibilityOff } from "@mui/icons-material"; // Import icons for show/hide password
-import { createClient } from "@supabase/supabase-js"; // Import Supabase client
 import { useRouter } from "next/navigation"; // Import useRouter from Next.js
 import SuccessModal from "./loginComponents/successModal"; // Import the SuccessModal component
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+
 
 const CustomButton = styled(Button)({
   backgroundColor: "#13dfae",
@@ -119,26 +115,37 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
-    // Validate email and password
+  
     if (!formData.email || !formData.password) {
       setMessage("Please provide both email and password.");
       setLoading(false);
       return;
     }
-
-    // Call Supabase for authentication
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
-    } else {
+  
+    try {
+      const response = await fetch("/api/loginAPI", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to login");
+      }
+  
       setMessage("Login successful! Redirecting...");
       router.push("/differentPages/dashboard"); // Redirect to the dashboard
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,8 +154,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
-    // Validate all fields
+  
     if (
       !formData.firstName ||
       !formData.lastName ||
@@ -160,43 +166,35 @@ const Login = () => {
       setLoading(false);
       return;
     }
-
+  
     if (formData.password !== formData.confirmPassword) {
       setMessage("Passwords do not match");
       setLoading(false);
       return;
     }
-
-    // Sign up the user with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-    });
-
-    if (authError) {
-      setMessage(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    // Insert additional user information into the profiles table
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .insert([
-        {
-          id: authData.user.id, // Use the user ID from the auth response
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+  
+    try {
+      const response = await fetch("/api/signupAPI", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           country: formData.country,
           dob: formData.dob,
-          balance: 0.00, // Set the balance to 0 upon signup
-        },
-      ]);
-
-    if (profileError) {
-      setMessage(profileError.message);
-    } else {
+          password: formData.password,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to sign up");
+      }
+  
       setIsModalOpen(true); // Open the success modal
       setFormData({
         firstName: "",
@@ -207,9 +205,11 @@ const Login = () => {
         password: "",
         confirmPassword: "",
       });
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   // Toggle password visibility
