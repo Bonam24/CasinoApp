@@ -1,533 +1,372 @@
 "use client";
-import React, { useState } from "react";
-import { format } from "date-fns";
-import {
-  Box,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Avatar,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  IconButton,
-  Divider,
-} from "@mui/material";
-import { styled } from "@mui/system";
-import { Close as CloseIcon } from "@mui/icons-material";
-import matchesData from "./matchesData.json";
-import QRCode from "qrcode"; // Import qrcode library
- // For generating QR codes
-import { jsPDF } from "jspdf"; // For generating PDFs
 
-// Define primary and secondary colors
-const primaryColor = "#13dfae";
-const primaryDarkColor = "#0fa37e"; // Darker shade for hover
-const secondaryColor = "#FFD700"; // Golden color for action buttons
-const secondaryDarkColor = "#e6b800"; // Darker shade for hover
+import { useState, useRef, useEffect } from "react";
+import { FaBasketballBall } from "react-icons/fa";
+import QRCode from "qrcode";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
-// Custom styled components
-const StyledTable = styled(Table)(({ theme }) => ({
-  minWidth: 650,
-  borderCollapse: "separate",
-  borderSpacing: "0 10px", // Add spacing between rows
-  [theme.breakpoints.down("sm")]: {
-    minWidth: "100%", // Make table responsive on small screens
-  },
-}));
+// Import the JSON data
+import matchesData from './matchesData.json';
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: "bold",
-  color: "#000", // Black text for contrast
-  textAlign: "center",
-  border: "none", // Remove default borders
-  fontSize: "0.875rem", // Smaller font size
-  [theme.breakpoints.down("sm")]: {
-    fontSize: "0.75rem", // Smaller font size on small screens
-    padding: "8px", // Reduce padding on small screens
-  },
-}));
+const leagues = [
+  { id: "nba", name: "NBA", icon: <FaBasketballBall className="text-yellow-400 text-4xl" /> },
+];
 
-const StyledTableRow = styled(TableRow)(({ theme }) => ({
-  backgroundColor: "#FFFFFF", // White background for rows
-  borderRadius: "12px",
-  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-  transition: "background-color 0.2s",
-  "&:hover": {
-    backgroundColor: "#F8F9FA", // Light gray on hover
-  },
-}));
+export default function BettingPage() {
+  const [selectedLeague, setSelectedLeague] = useState(null);
+  const [selectedBet, setSelectedBet] = useState({});
+  const [betSlip, setBetSlip] = useState([]);
+  const [betAmount, setBetAmount] = useState("");
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
+  const [currentTime, setCurrentTime] = useState("");
+  const receiptRef = useRef(null);
 
-const BetButton = styled(Button)({
-  backgroundColor: primaryColor, // Use primary color
-  color: "#000", // Black text for contrast
-  "&:hover": {
-    backgroundColor: primaryDarkColor, // Darker primary color on hover
-  },
-  borderRadius: "8px",
-  padding: "6px 12px", // Smaller padding
-  fontSize: "12px", // Smaller font size
-  textTransform: "none",
-  fontWeight: "bold",
-});
-
-const ActionButton = styled(Button)({
-  backgroundColor: secondaryColor, // Use secondary color
-  color: "#222", // Dark text for contrast
-  "&:hover": {
-    backgroundColor: secondaryDarkColor, // Darker secondary color on hover
-  },
-  borderRadius: "8px",
-  padding: "6px 12px", // Smaller padding
-  fontSize: "12px", // Smaller font size
-  textTransform: "none",
-  fontWeight: "bold",
-  margin: "4px", // Add spacing between buttons
-});
-
-// Helper function to format date in a consistent way
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return format(date, "yyyy-MM-dd"); // Use date-fns for consistent formatting
-};
-
-const MatchesTable = () => {
-  const [selectedLeague, setSelectedLeague] = useState("all"); // State for league selection
-  const [selectedMatches, setSelectedMatches] = useState({}); // State for selected matches
-  const [betAmount, setBetAmount] = useState(""); // State for bet amount
-
-  // Handle league selection change
-  const handleLeagueChange = (event) => {
-    setSelectedLeague(event.target.value);
-  };
-
-  // Handle team or draw selection
-  const handleSelection = (matchId, option, odds, match) => {
-    setSelectedMatches((prev) => ({
-      ...prev,
-      [matchId]: { option, odds, match },
-    }));
-  };
-
-  // Handle removing a selected match
-  const handleRemoveMatch = (matchId) => {
-    setSelectedMatches((prev) => {
-      const updatedMatches = { ...prev };
-      delete updatedMatches[matchId];
-      return updatedMatches;
-    });
-  };
-
-  // Calculate expected returns
-  const calculateExpectedReturns = () => {
-    const totalOdds = Object.values(selectedMatches).reduce(
-      (sum, { odds }) => sum + parseFloat(odds),
-      0
+  // Set current date and time on client side
+  useEffect(() => {
+    const now = new Date();
+    setCurrentDate(
+      now.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      })
     );
-    return (parseFloat(betAmount) * totalOdds).toFixed(2);
+    setCurrentTime(
+      now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+      })
+    );
+  }, []);
+
+  const filteredMatches = selectedLeague
+    ? matchesData.filter((match) => match.league === selectedLeague)
+    : matchesData;
+
+  const handlePlaceBet = (match, betType) => {
+    setSelectedBet((prev) => ({ ...prev, [match.id]: betType }));
+    const selectedBet = {
+      matchId: match.id,
+      teams: { home: match.team1.name, away: match.team2.name },
+      betType,
+      odds: match.odds[betType],
+    };
+
+    setBetSlip((prev) => {
+      const existingBet = prev.find((bet) => bet.matchId === match.id);
+      if (existingBet) {
+        return prev.map((bet) => (bet.matchId === match.id ? selectedBet : bet));
+      }
+      return [...prev, selectedBet];
+    });
   };
 
-  // Generate and download PDF ticket
-
-  const generateTicket = async () => {
-    const doc = new jsPDF();
-  
-    // Constants for styling
-    const primaryColor = [19, 223, 174]; // #13dfae in RGB
-    const secondaryColor = [0, 0, 0]; // Black
-    const watermarkOpacity = 0.05; // 5% opacity for watermark (very faint)
-    const padding = 10; // Padding for content
-    const pageWidth = doc.internal.pageSize.getWidth(); // Get page width
-    const pageHeight = doc.internal.pageSize.getHeight(); // Get page height
-  
-    // Add a border around the ticket
-    doc.setDrawColor(...primaryColor); // Set border color to #13dfae
-    doc.setLineWidth(0.5); // Thin border
-    doc.rect(padding, padding, pageWidth - 2 * padding, pageHeight - 2 * padding); // Draw border
-  
-    // Add a faint watermark
-    doc.setFontSize(40);
-    doc.setTextColor(...primaryColor, watermarkOpacity * 255); // Set watermark color with opacity
-    doc.setFont("helvetica", "bold");
-    doc.text("BundleBets", pageWidth / 2, pageHeight / 2, {
-      angle: 45,
-      align: "center",
-      baseline: "middle",
+  const handleRemoveBet = (matchId) => {
+    setBetSlip((prev) => prev.filter((bet) => bet.matchId !== matchId));
+    setSelectedBet((prev) => {
+      const updatedSelectedBet = { ...prev };
+      delete updatedSelectedBet[matchId];
+      return updatedSelectedBet;
     });
-  
-    // Reset text color and font for content
-    doc.setTextColor(...secondaryColor);
-    doc.setFont("helvetica", "normal");
-  
-    // Add header with logo and title
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Betting Ticket", pageWidth / 2, padding + 15, { align: "center" });
-  
-    // Add a divider line under the header
-    doc.setDrawColor(...primaryColor);
-    doc.setLineWidth(0.5);
-    doc.line(padding, padding + 20, pageWidth - padding, padding + 20);
-  
-    // Add date and time
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Date: ${format(new Date(), "yyyy-MM-dd HH:mm")}`, padding, padding + 30);
-  
-    // Add a divider line below the date
-    doc.text("---------------", padding, padding + 35);
-  
-    // Add bet amount
-    doc.text(`Bet Amount: $${betAmount}`, padding, padding + 45);
-  
-    // Add a divider line below the bet amount
-    doc.text("---------------", padding, padding + 50);
-  
-    // Add potential winnings
-    doc.text(`Potential Winnings: $${calculateExpectedReturns()}`, padding, padding + 60);
-  
-    // Add a divider line below the potential winnings
-    doc.text("---------------", padding, padding + 65);
-  
-    // Add a section header for selected matches
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Selected Matches", padding, padding + 75);
-  
-    // Add a divider line below the selected matches header
-    doc.text("---------------", padding, padding + 80);
-  
-    // Add selected matches
-    let yPos = padding + 85;
-    Object.entries(selectedMatches).forEach(([matchId, { option, odds, match }]) => {
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      doc.text(
-        `• ${match.team1.name} vs ${match.team2.name} - ${option} (Odds: ${odds})`,
-        padding,
-        yPos
-      );
-      yPos += 10;
-    });
-  
-    // Add a QR code for verification
-    const qrCodeData = JSON.stringify({
-      date: format(new Date(), "yyyy-MM-dd HH:mm"),
-      betAmount,
-      potentialWinnings: calculateExpectedReturns(),
-      selectedMatches: Object.values(selectedMatches).map(({ match, option, odds }) => ({
-        match: `${match.team1.name} vs ${match.team2.name}`,
-        option,
-        odds,
-      })),
-    });
-  
-    // Generate QR code on a canvas
-    const canvas = document.createElement("canvas");
-    await QRCode.toCanvas(canvas, qrCodeData, { width: 100 });
-  
-    // Convert canvas to image and add to PDF
-    const qrCodeImage = canvas.toDataURL("image/png");
-    const qrCodeWidth = 50;
-    const qrCodeHeight = 50;
-    doc.addImage(
-      qrCodeImage,
-      "PNG",
-      pageWidth - padding - qrCodeWidth,
-      pageHeight - padding - qrCodeHeight,
-      qrCodeWidth,
-      qrCodeHeight
-    );
-  
-    // Add footer text
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
-    doc.text(
-      "Thank you for using BundleBets!",
-      pageWidth / 2,
-      pageHeight - padding - qrCodeHeight - 10,
-      { align: "center" }
-    );
-  
-    // Save the PDF
-    doc.save("betting_ticket.pdf");
   };
-// Handle placing a bet
-const handlePlaceBet = async () => {
-  console.log("Placing bet:", {
-    selectedMatches,
-    betAmount,
-    expectedReturns: calculateExpectedReturns(),
-  });
 
-  // Generate and download the ticket
-  await generateTicket();
-
-  // Reset selected matches and bet amount
-  setSelectedMatches({});
-  setBetAmount("");
-};
-
-  // Handle canceling the bet
-  const handleCancel = () => {
-    setSelectedMatches({});
+  const handleCancelAllBets = () => {
+    setBetSlip([]);
+    setSelectedBet({});
     setBetAmount("");
+    setQrCodeDataUrl("");
   };
 
-  // Filter matches based on selected league
-  const filteredMatches =
-    selectedLeague === "all"
-      ? matchesData
-      : matchesData.filter((match) => match.league === selectedLeague);
+  const handlePlaceAllBets = () => {
+    if (betSlip.length === 0 || !betAmount) {
+      alert("Please add bets and enter a bet amount.");
+      return;
+    }
+
+    // Generate QR code data
+    const qrCodeData = JSON.stringify({
+      bets: betSlip,
+      betAmount,
+      potentialReturn: calculatePotentialReturn(),
+    });
+
+    QRCode.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, url) => {
+      if (err) {
+        console.error("Error generating QR code:", err);
+        return;
+      }
+      setQrCodeDataUrl(url);
+
+      // Add a small delay to ensure the QR code is rendered
+      setTimeout(() => {
+        generateReceiptPDF();
+      }, 500); // 500ms delay
+    });
+  };
+
+  const calculatePotentialReturn = () => {
+    if (betSlip.length === 0 || !betAmount) return 0;
+    const totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+    return betAmount * totalOdds;
+  };
+
+  const generateReceiptPDF = () => {
+    const receiptElement = receiptRef.current;
+    if (!receiptElement) {
+      console.error("Receipt element not found.");
+      return;
+    }
+
+    // Make the receipt element visible
+    receiptElement.classList.remove("invisible");
+
+    console.log("Generating PDF...");
+
+    html2canvas(receiptElement, {
+      useCORS: true,
+      logging: true,
+    }).then((canvas) => {
+      console.log("Canvas created successfully.");
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 190; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+      pdf.save("betting_receipt.pdf");
+      console.log("PDF saved successfully.");
+
+      // Hide the receipt element again
+      receiptElement.classList.add("invisible");
+    }).catch((error) => {
+      console.error("Error generating PDF:", error);
+      // Hide the receipt element in case of error
+      receiptElement.classList.add("invisible");
+    });
+  };
 
   return (
-    <Box
-      sx={{
-        p: { xs: 2, sm: 4 },
-        backgroundColor: "#F5F5F5", // Light gray background
-        minHeight: "100vh",
-        color: "#000", // Black text for contrast
-        display: "flex",
-        gap: 4,
-      }}
-    >
-      {/* Fixed League Selection */}
-      <Box
-        sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: primaryDarkColor, // Darker primary color for header
-          zIndex: 1000,
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-          p: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel sx={{ color: "#FFFFFF", fontSize: "0.875rem" }}>League</InputLabel>
-          <Select
-            value={selectedLeague}
-            onChange={handleLeagueChange}
-            label="League"
-            sx={{ color: "#FFFFFF", fontSize: "0.875rem", "& .MuiOutlinedInput-notchedOutline": { borderColor: "#FFFFFF" } }}
-          >
-            <MenuItem value="all" sx={{ fontSize: "0.875rem" }}>All</MenuItem>
-            <MenuItem value="nba" sx={{ fontSize: "0.875rem" }}>NBA</MenuItem>
-            <MenuItem value="epl" sx={{ fontSize: "0.875rem" }}>EPL</MenuItem>
-            <MenuItem value="la-liga" sx={{ fontSize: "0.875rem" }}>La Liga</MenuItem>
-            <MenuItem value="uefa" sx={{ fontSize: "0.875rem" }}>UEFA</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-
-      {/* Spacer to prevent content from being hidden behind the fixed header */}
-      <Box sx={{ height: "100px" }} />
-
-      {/* Matches Table */}
-      <Box sx={{ flex: 1, overflowX: "auto", mr: { sm: "400px" } }}>
-        <Typography variant="h4" fontWeight="bold" mb={4} color="#000" sx={{ fontSize: "1.25rem" }}>
-          Upcoming Matches
-        </Typography>
-        <TableContainer
-          component={Paper}
-          sx={{
-            borderRadius: "12px",
-            boxShadow: "none",
-            background: "transparent",
-          }}
-        >
-          <StyledTable>
-            <TableHead>
-              <TableRow>
-                <StyledTableCell sx={{ textAlign: "left", pl: 4 }}>Match ID</StyledTableCell>
-                <StyledTableCell sx={{ textAlign: "left" }}>Teams</StyledTableCell>
-                <StyledTableCell>Date</StyledTableCell>
-                <StyledTableCell>1</StyledTableCell>
-                <StyledTableCell>X</StyledTableCell>
-                <StyledTableCell>2</StyledTableCell>
-                <StyledTableCell>Actions</StyledTableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredMatches.map((match) => (
-                <StyledTableRow
-                  key={match.id}
-                  sx={{
-                    backgroundColor: selectedMatches[match.id] ? "#E8F5E9" : "#FFFFFF", // Green background for selected matches
-                  }}
-                >
-                  {/* Match ID */}
-                  <StyledTableCell sx={{ textAlign: "left", pl: 4 }}>
-                    <Typography variant="body1" fontWeight="bold" sx={{ fontSize: "0.875rem" }}>
-                      {match.id}
-                    </Typography>
-                  </StyledTableCell>
-
-                  {/* Teams */}
-                  <StyledTableCell sx={{ textAlign: "left" }}>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Avatar
-                        src={match.team1.logo}
-                        alt={match.team1.name}
-                        sx={{ width: 30, height: 30, bgcolor: primaryColor }} // Use primary color for team icon
-                      />
-                      <Typography variant="body1" fontWeight="bold" sx={{ fontSize: "0.875rem" }}>
-                        {match.team1.name} vs {match.team2.name}
-                      </Typography>
-                      <Avatar
-                        src={match.team2.logo}
-                        alt={match.team2.name}
-                        sx={{ width: 30, height: 30, bgcolor: primaryColor }} // Use primary color for team icon
-                      />
-                    </Box>
-                  </StyledTableCell>
-
-                  {/* Date */}
-                  <StyledTableCell>
-                    <Typography variant="body1" fontWeight="bold" sx={{ fontSize: "0.875rem" }}>
-                      {formatDate(match.date)}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.75rem" }}>
-                      {format(new Date(match.date), "HH:mm")} {/* Use date-fns for consistent time formatting */}
-                    </Typography>
-                  </StyledTableCell>
-
-                  {/* Odds Buttons */}
-                  <StyledTableCell>
-                    <Button
-                      variant="contained"
-                      sx={{ backgroundColor: primaryColor, color: "#000", width: "100%", fontSize: "0.75rem", padding: "4px 8px" }}
-                      onClick={() => handleSelection(match.id, match.team1.name, match.odds.team1, match)}
-                    >
-                      {match.team1.name} ({match.odds.team1})
-                    </Button>
-                  </StyledTableCell>
-                  <StyledTableCell>
-                    <Button
-                      variant="contained"
-                      sx={{ backgroundColor: primaryColor, color: "#000", width: "100%", fontSize: "0.75rem", padding: "4px 8px" }}
-                      onClick={() => handleSelection(match.id, "Draw", match.odds.draw, match)}
-                    >
-                      Draw ({match.odds.draw})
-                    </Button>
-                  </StyledTableCell>
-                  <StyledTableCell>
-                    <Button
-                      variant="contained"
-                      sx={{ backgroundColor: primaryColor, color: "#000", width: "100%", fontSize: "0.75rem", padding: "4px 8px" }}
-                      onClick={() => handleSelection(match.id, match.team2.name, match.odds.team2, match)}
-                    >
-                      {match.team2.name} ({match.odds.team2})
-                    </Button>
-                  </StyledTableCell>
-
-                  {/* Additional Actions */}
-                  <StyledTableCell>
-                    <Box display="flex" gap={1}>
-                      <ActionButton>View Details</ActionButton>
-                      <ActionButton>More Options</ActionButton>
-                    </Box>
-                  </StyledTableCell>
-                </StyledTableRow>
-              ))}
-            </TableBody>
-          </StyledTable>
-        </TableContainer>
-      </Box>
-
-      {/* Fixed Bet Component on the Far Right */}
-      <Box
-        sx={{
-          position: "fixed",
-          top: "100px", // Align with the first row of the matches table
-          right: 16,
-          width: { xs: "90%", sm: "350px" },
-          bgcolor: "background.paper",
-          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-          p: 4,
-          borderRadius: "12px",
-          zIndex: 1000,
-          height: "80vh", // 80% of the screen height
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" mb={2}>
-          Selected Matches
-        </Typography>
-        <Box
-          sx={{
-            flex: 1,
-            overflowY: "auto", // Scrollable list of selected matches
-            mb: 2,
-          }}
-        >
-          {Object.entries(selectedMatches).map(([matchId, { option, odds, match }]) => (
-            <Box key={matchId}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="body1" fontWeight="bold">
-                  Match {matchId}: {match.team1.name} vs {match.team2.name} - {option} (Odds: {odds})
-                </Typography>
-                <IconButton onClick={() => handleRemoveMatch(matchId)}>
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </Box>
-              <Divider sx={{ mb: 2 }} /> {/* Border line after each match */}
-            </Box>
-          ))}
-        </Box>
-
-        {/* Fixed Input and Bet Button Section */}
-        <Box sx={{ flexShrink: 0 }}>
-          <TextField
-            label="Total Bet Amount"
-            type="number"
-            fullWidth
-            value={betAmount}
-            onChange={(e) => setBetAmount(e.target.value)}
-            sx={{ mb: 2 }}
+    <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
+      {/* Header */}
+      <div className="bg-teal-500 text-white p-4 rounded-lg shadow-lg mb-6 flex justify-between items-center">
+        {/* Left Side: Logo and Text */}
+        <div className="flex items-center gap-3">
+          <img
+            src="/images/BundlesBetsLogo.png" // Replace with your logo path
+            alt="Bundlesbets Logo"
+            className="w-10 h-10"
           />
-          {betAmount && (
-            <Typography variant="body1" fontWeight="bold" mb={2}>
-              Expected Returns: ${calculateExpectedReturns()}
-            </Typography>
-          )}
-          <Box display="flex" gap={2}>
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={handleCancel}
-              sx={{ color: primaryColor, borderColor: primaryColor }}
-            >
-              Cancel
-            </Button>
-            <BetButton onClick={handlePlaceBet} fullWidth>
-              Place Bet
-            </BetButton>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
-  );
-};
+          <span className="text-2xl font-bold">Bundlesbets AI Agent</span>
+        </div>
 
-export default MatchesTable;
+        {/* Right Side: Dashboard Link */}
+        <a
+          href="/dashboard" // Replace with your dashboard route
+          className="text-lg font-semibold hover:underline"
+        >
+          Back to Dashboard
+        </a>
+      </div>
+
+      {/* League Selector in Header */}
+      <div className="flex justify-center gap-6 mb-6">
+        {leagues.map((league) => (
+          <button
+            key={league.id}
+            className={`p-3 rounded-full transition ${
+              selectedLeague === league.id ? "bg-teal-500" : "bg-gray-800 hover:bg-gray-700"
+            }`}
+            onClick={() => setSelectedLeague(selectedLeague === league.id ? null : league.id)}
+          >
+            {league.icon}
+          </button>
+        ))}
+      </div>
+
+      {/* Main content */}
+      <div className="flex gap-6 flex-1">
+        <div className="flex-1">
+          {/* Matches List */}
+          <div className="overflow-y-auto max-h-[65vh]">
+            {filteredMatches.length > 0 ? (
+              filteredMatches.map((match) => (
+                <div
+                  key={match.id}
+                  className={`p-4 rounded-lg mb-4 shadow-lg transition-all duration-200 ${
+                    selectedBet[match.id] ? "bg-teal-900" : "bg-gray-800"
+                  }`}
+                >
+                  <div className="flex justify-between items-center border-b border-gray-700 pb-2 mb-3">
+                    <span className="text-xs text-gray-400">
+                      {new Date(match.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                      })} | {new Date(match.date).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true,
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-12 items-center gap-4">
+                    {/* Match Details */}
+                    <div className="col-span-4 flex items-center gap-2">
+                      <img src={match.team1.logo} alt={match.team1.name} className="w-10 h-10" />
+                      <h2 className="text-sm font-semibold">{match.team1.name} vs {match.team2.name}</h2>
+                      <img src={match.team2.logo} alt={match.team2.name} className="w-10 h-10" />
+                    </div>
+
+                    {/* Betting Odds */}
+                    <div className="col-span-5 flex justify-around">
+                      {Object.entries(match.odds).map(([type, odd]) => (
+                        <button
+                          key={type}
+                          className={`px-4 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+                            selectedBet[match.id] === type
+                              ? "bg-teal-500 text-white"
+                              : "bg-gray-700 hover:bg-teal-400 hover:text-black"
+                          }`}
+                          onClick={() => handlePlaceBet(match, type)}
+                        >
+                          {type === "team1" ? match.team1.name : type === "team2" ? match.team2.name : "Draw"} <br />
+                          <span className="text-lg font-bold">{odd}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* AI Prediction & More Bets Buttons */}
+                    <div className="col-span-3 flex gap-2">
+                      <button className="px-4 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg">
+                        AI Prediction
+                      </button>
+                      <button className="px-4 py-2 text-xs bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg">
+                        More Bets
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-400">No matches available for this league.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Bet Slip */}
+        <div className="w-96 bg-gray-800 p-4 rounded-lg shadow-lg h-auto">
+          <h2 className="text-xl font-bold text-teal-400 mb-4">Your Bet Slip</h2>
+          <div className="flex-1">
+            {betSlip.length > 0 ? (
+              betSlip.map((bet, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center p-3 mb-3 rounded-lg bg-gray-700"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{bet.teams.home} vs {bet.teams.away}</span>
+                  </div>
+                  <span className="text-sm font-bold">{bet.odds}</span>
+                  <button
+                    onClick={() => handleRemoveBet(bet.matchId)}
+                    className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-400">No bets selected.</p>
+            )}
+          </div>
+
+          {/* Bet Amount Input and Buttons */}
+          <div className="mt-4">
+            <input
+              type="number"
+              placeholder="Enter bet amount"
+              value={betAmount}
+              onChange={(e) => setBetAmount(e.target.value)}
+              className="w-full p-2 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400"
+            />
+            <div className="flex justify-between gap-2">
+              <button
+                onClick={handleCancelAllBets}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePlaceAllBets}
+                className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+              >
+                Place Bet
+              </button>
+            </div>
+          </div>
+
+          {/* Potential Return */}
+          <div className="mt-4 text-center">
+            <p className="text-gray-400">
+              Your potential return is:{" "}
+              <span className="font-bold text-teal-400">
+                ${calculatePotentialReturn().toFixed(2)}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Receipt (Hidden) */}
+      <div ref={receiptRef} className="invisible">
+        <div className="p-6 bg-white text-black rounded-lg shadow-lg relative">
+          {/* Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-10">
+            <span className="text-6xl font-bold text-gray-300 rotate-45">Bundlesbets</span>
+          </div>
+
+          {/* Receipt Content */}
+          <div className="relative">
+            <h1 className="text-3xl font-bold text-center mb-4 text-teal-500">Bundlesbets Receipt</h1>
+            <div className="border-b border-gray-300 pb-4 mb-4">
+              <p className="text-lg text-gray-600">Date: {currentDate}</p>
+              <p className="text-lg text-gray-600">Time: {currentTime}</p>
+            </div>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold mb-2 text-teal-500">Bets</h2>
+              {betSlip.map((bet, index) => (
+                <div key={index} className="flex justify-between items-center mb-2">
+                  <p className="text-lg">{bet.teams.home} vs {bet.teams.away}</p>
+                  <p className="text-lg font-bold">Odds: {bet.odds}</p>
+                </div>
+              ))}
+            </div>
+            <div className="border-b border-gray-300 pb-4 mb-4">
+              <p className="text-lg">Bet Amount: ${betAmount}</p>
+              <p className="text-lg">Potential Return: ${calculatePotentialReturn().toFixed(2)}</p>
+            </div>
+            <div className="flex flex-col items-center">
+              {qrCodeDataUrl && (
+                <img
+                  src={qrCodeDataUrl}
+                  alt="QR Code"
+                  className="w-32 h-32"
+                  onLoad={() => {
+                    console.log("QR code loaded successfully.");
+                  }}
+                />
+              )}
+              <p className="text-lg text-gray-600 mt-2">Thank you for playing with Bundlesbets</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
