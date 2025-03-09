@@ -165,7 +165,7 @@ export default function BettingPage() {
 
         {/* Right Side: Dashboard Link */}
         <a
-          href="/dashboard" // Replace with your dashboard route
+          href="/differentPages/dashboard" // Replace with your dashboard route
           className="text-lg font-semibold hover:underline"
         >
           Back to Dashboard
@@ -218,9 +218,7 @@ export default function BettingPage() {
                   <div className="grid grid-cols-12 items-center gap-4">
                     {/* Match Details */}
                     <div className="col-span-4 flex items-center gap-2">
-                      <img src={match.team1.logo} alt={match.team1.name} className="w-10 h-10" />
                       <h2 className="text-sm font-semibold">{match.team1.name} vs {match.team2.name}</h2>
-                      <img src={match.team2.logo} alt={match.team2.name} className="w-10 h-10" />
                     </div>
 
                     {/* Betting Odds */}

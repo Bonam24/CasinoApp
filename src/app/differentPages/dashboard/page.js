@@ -52,20 +52,34 @@ import {
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { logout } from "../loginPage/action"; // Import the logout function
-import {supabase} from "../../components/utils/supabase/supabaseClient"
+import { supabase } from "../../components/utils/supabase/supabaseClient";
 
 // Custom styled components
-const DashboardPaper = styled(Paper)({
+const DashboardPaper = styled(Paper)(({ theme }) => ({
   padding: "16px",
   borderRadius: "12px",
   boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-  backgroundColor: "#ffffff",
+  backgroundColor: "#0000ff", // Dark gray background
+  color: "#ffffff", // White text
   transition: "transform 0.2s, box-shadow 0.2s",
   "&:hover": {
     transform: "translateY(-5px)",
     boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.2)",
   },
-});
+}));
+
+const StatsPaper = styled(Paper)(({ theme }) => ({
+  padding: "16px",
+  borderRadius: "12px",
+  boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
+  backgroundColor: "#000000", // Distinctive black background
+  color: "#ffffff", // White text
+  transition: "transform 0.2s, box-shadow 0.2s",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.2)",
+  },
+}));
 
 const CustomButton = styled(Button)({
   backgroundColor: "#0ead87", // Primary teal-green
@@ -83,7 +97,7 @@ const CustomButton = styled(Button)({
 const RecentActivityItem = styled(ListItem)({
   transition: "background-color 0.2s",
   "&:hover": {
-    backgroundColor: "#f5f5f5", // Light gray on hover
+    backgroundColor: "#333333", // Darker gray on hover
   },
 });
 
@@ -99,16 +113,16 @@ const Dashboard = () => {
     const fetchUserData = async () => {
       try {
         console.log("Fetching user data...");
-    
+
         // Get the current session token
         const { data: session } = await supabase.auth.getSession();
         if (!session?.session?.access_token) {
           console.error("No session found.");
           throw new Error("Unauthorized: No session");
         }
-    
+
         const token = session.session.access_token;
-    
+
         const response = await fetch("/api/dashboardBackend", {
           method: "POST",
           headers: {
@@ -117,14 +131,14 @@ const Dashboard = () => {
           },
           body: JSON.stringify({}), // Empty body, but needed for POST request
         });
-    
+
         if (!response.ok) {
           throw new Error(`Failed to fetch user data: ${response.statusText}`);
         }
-    
+
         const { firstName, balance } = await response.json();
         console.log("User data:", { firstName, balance });
-    
+
         setUserName(firstName);
         setBalance(balance);
       } catch (error) {
@@ -133,13 +147,9 @@ const Dashboard = () => {
         setBalance(0);
       }
     };
-    
-    
-    
-  
+
     fetchUserData();
   }, []);
-
 
   // Handle logout
   const handleLogout = async () => {
@@ -220,7 +230,7 @@ const Dashboard = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, backgroundColor: "#f5f5f5", paddingTop: "64px" }}>
+    <Box sx={{ flexGrow: 1, backgroundColor: "#233", paddingTop: "64px" }}>
       {/* Header */}
       <AppBar position="fixed" sx={{ backgroundColor: "#0ead87" }}>
         <Toolbar>
@@ -323,7 +333,7 @@ const Dashboard = () => {
           variant="h4"
           fontWeight="bold"
           mb={4}
-          color="#222"
+          color="#ffffff" // White text
           sx={{ fontSize: { xs: "1.5rem", sm: "2rem" } }} // Responsive font size
         >
           Welcome Back, {userName || "Guest"}!
@@ -340,7 +350,7 @@ const Dashboard = () => {
             <Grid item xs={6} sm={6} md={3} key={index}>
               <motion.div whileHover={{ scale: 1.05 }}>
                 <Link href={stat.link} underline="none">
-                  <DashboardPaper>
+                  <StatsPaper>
                     <Box display="flex" alignItems="center">
                       <Avatar sx={{ bgcolor: "#0c8a6a", mr: 2 }}>
                         {stat.icon}
@@ -361,7 +371,7 @@ const Dashboard = () => {
                         </Typography>
                       </Box>
                     </Box>
-                  </DashboardPaper>
+                  </StatsPaper>
                 </Link>
               </motion.div>
             </Grid>
@@ -372,7 +382,7 @@ const Dashboard = () => {
         <Grid container spacing={2} mb={4}>
           <Grid item xs={12} md={8}>
             <motion.div whileHover={{ scale: 1.02 }}>
-              <DashboardPaper>
+              <StatsPaper>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                   <Typography variant="h6" fontWeight="bold">
                     Weekly Betting Activity
@@ -402,12 +412,12 @@ const Dashboard = () => {
                     <Bar dataKey="wins" fill="#FFD700" name="Total Wins" />
                   </BarChart>
                 </ResponsiveContainer>
-              </DashboardPaper>
+              </StatsPaper>
             </motion.div>
           </Grid>
           <Grid item xs={12} md={4}>
             <motion.div whileHover={{ scale: 1.02 }}>
-              <DashboardPaper>
+              <StatsPaper>
                 <Typography variant="h6" fontWeight="bold" mb={2} textAlign="left">
                   Quick Actions
                 </Typography>
@@ -418,7 +428,7 @@ const Dashboard = () => {
                   <CustomButton startIcon={<LocalAtm />}>Withdraw Funds</CustomButton>
                   <CustomButton startIcon={<Redeem />}>View Promotions</CustomButton>
                 </Box>
-              </DashboardPaper>
+              </StatsPaper>
             </motion.div>
           </Grid>
         </Grid>
@@ -427,7 +437,7 @@ const Dashboard = () => {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <motion.div whileHover={{ scale: 1.02 }}>
-              <DashboardPaper>
+              <StatsPaper>
                 <Typography variant="h6" fontWeight="bold" mb={2}>
                   Recent Activity
                 </Typography>
@@ -442,8 +452,8 @@ const Dashboard = () => {
                           <ListItemText
                             primary={activity.primary}
                             secondary={activity.secondary}
-                            primaryTypographyProps={{ color: "#333" }}
-                            secondaryTypographyProps={{ color: "#666" }}
+                            primaryTypographyProps={{ color: "#ffffff" }} // White text
+                            secondaryTypographyProps={{ color: "#cccccc" }} // Light gray text
                           />
                         </RecentActivityItem>
                       </Link>
@@ -451,7 +461,7 @@ const Dashboard = () => {
                     </React.Fragment>
                   ))}
                 </List>
-              </DashboardPaper>
+              </StatsPaper>
             </motion.div>
           </Grid>
         </Grid>
