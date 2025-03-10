@@ -59,7 +59,7 @@ const DashboardPaper = styled(Paper)(({ theme }) => ({
   padding: "16px",
   borderRadius: "12px",
   boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-  backgroundColor: "#0000ff", // Dark gray background
+  backgroundColor: "#1a1a1a", // Dark gray background for cards
   color: "#ffffff", // White text
   transition: "transform 0.2s, box-shadow 0.2s",
   "&:hover": {
@@ -72,7 +72,7 @@ const StatsPaper = styled(Paper)(({ theme }) => ({
   padding: "16px",
   borderRadius: "12px",
   boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.1)",
-  backgroundColor: "#000000", // Distinctive black background
+  backgroundColor: "#234", // Darker gray for stats cards
   color: "#ffffff", // White text
   transition: "transform 0.2s, box-shadow 0.2s",
   "&:hover": {
@@ -82,7 +82,7 @@ const StatsPaper = styled(Paper)(({ theme }) => ({
 }));
 
 const CustomButton = styled(Button)({
-  backgroundColor: "#0ead87", // Primary teal-green
+  backgroundColor: "#14b8a6", // Primary teal-green
   color: "#fff",
   "&:hover": {
     backgroundColor: "#0c8a6a", // Slightly darker teal-green on hover
@@ -97,7 +97,7 @@ const CustomButton = styled(Button)({
 const RecentActivityItem = styled(ListItem)({
   transition: "background-color 0.2s",
   "&:hover": {
-    backgroundColor: "#333333", // Darker gray on hover
+    backgroundColor: "#223", // Darker gray on hover
   },
 });
 
@@ -230,9 +230,9 @@ const Dashboard = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, backgroundColor: "#233", paddingTop: "64px" }}>
+    <Box sx={{ flexGrow: 1, backgroundColor: "#111827", paddingTop: "64px" }}>
       {/* Header */}
-      <AppBar position="fixed" sx={{ backgroundColor: "#0ead87" }}>
+      <AppBar position="fixed" sx={{ backgroundColor: "#14b8a6" }}>
         <Toolbar>
           {/* Image and Title */}
           <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
@@ -265,24 +265,24 @@ const Dashboard = () => {
           {/* Navigation Links (only on larger screens) */}
           <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 2 }}>
             <Link href="/sports" color="inherit" underline="none">
-              <Button color="inherit" startIcon={<Sports sx={{ color: "#FFD700" }} />}>
+              <Button color="inherit" startIcon={<Sports sx={{ color: "#ffffff" }} />}>
                 Sports
               </Button>
             </Link>
             <Link href="/payments" color="inherit" underline="none">
-              <Button color="inherit" startIcon={<Payment sx={{ color: "#FFD700" }} />}>
+              <Button color="inherit" startIcon={<Payment sx={{ color: "#ffffff" }} />}>
                 Payments
               </Button>
             </Link>
             <Link href="/leaderboard" color="inherit" underline="none">
-              <Button color="inherit" startIcon={<EmojiEvents sx={{ color: "#FFD700" }} />}>
+              <Button color="inherit" startIcon={<EmojiEvents sx={{ color: "#ffffff" }} />}>
                 Leaderboard
               </Button>
             </Link>
             {/* Logout Button (only on larger screens) */}
             <Button
               color="inherit"
-              startIcon={<ExitToApp sx={{ color: "#FFD700" }} />}
+              startIcon={<ExitToApp sx={{ color: "#ffffff" }} />}
               onClick={handleLogout}
             >
               Logout
@@ -309,19 +309,19 @@ const Dashboard = () => {
         sx={{ display: { xs: "block", sm: "none" } }}
       >
         <MenuItem onClick={handleClose}>
-          <Sports sx={{ mr: 2, color: "#FFD700" }} />
+          <Sports sx={{ mr: 2, color: "#13dfae" }} />
           Sports
         </MenuItem>
         <MenuItem onClick={handleClose}>
-          <Payment sx={{ mr: 2, color: "#FFD700" }} />
+          <Payment sx={{ mr: 2, color: "#13dfae" }} />
           Payments
         </MenuItem>
         <MenuItem onClick={handleClose}>
-          <EmojiEvents sx={{ mr: 2, color: "#FFD700" }} />
+          <EmojiEvents sx={{ mr: 2, color: "#13dfae" }} />
           Leaderboard
         </MenuItem>
         <MenuItem onClick={handleLogout}>
-          <ExitToApp sx={{ mr: 2, color: "#FFD700" }} />
+          <ExitToApp sx={{ mr: 2, color: "#13dfae" }} />
           Logout
         </MenuItem>
       </Menu>
@@ -352,7 +352,7 @@ const Dashboard = () => {
                 <Link href={stat.link} underline="none">
                   <StatsPaper>
                     <Box display="flex" alignItems="center">
-                      <Avatar sx={{ bgcolor: "#0c8a6a", mr: 2 }}>
+                      <Avatar sx={{ bgcolor: "#14b8a6", mr: 2 }}>
                         {stat.icon}
                       </Avatar>
                       <Box>
@@ -384,31 +384,32 @@ const Dashboard = () => {
             <motion.div whileHover={{ scale: 1.02 }}>
               <StatsPaper>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6" fontWeight="bold">
+                  <Typography variant="h6" fontWeight="bold" color="#ffffff">
                     Weekly Betting Activity
                   </Typography>
                   <FormControl sx={{ minWidth: 120 }}>
-                    <InputLabel>Week</InputLabel>
+                    <InputLabel sx={{ color: "#ffffff" }}>Week</InputLabel>
                     <Select
                       value={selectedWeek}
                       onChange={handleWeekChange}
                       label="Week"
                       size="small"
+                      sx={{ color: "#ffffff", "& .MuiSelect-icon": { color: "#ffffff" } }}
                     >
-                      <MenuItem value="thisWeek">This Week</MenuItem>
-                      <MenuItem value="feb23_27">23-27 February</MenuItem>
-                      <MenuItem value="feb16_20">16-20 February</MenuItem>
+                      <MenuItem value="thisWeek" sx={{ color: "#1f1f1f" }}>This Week</MenuItem>
+                      <MenuItem value="feb23_27" sx={{ color: "#1f1f1f" }}>23-27 February</MenuItem>
+                      <MenuItem value="feb16_20" sx={{ color: "#1f1f1f" }}>16-20 February</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={weeklyData[selectedWeek]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff" />
+                    <XAxis dataKey="name" stroke="#ffffff" />
+                    <YAxis stroke="#ffffff" />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="bets" fill="#0ead87" name="Total Bets" />
+                    <Bar dataKey="bets" fill="#14b8a6" name="Total Bets" />
                     <Bar dataKey="wins" fill="#FFD700" name="Total Wins" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -418,7 +419,7 @@ const Dashboard = () => {
           <Grid item xs={12} md={4}>
             <motion.div whileHover={{ scale: 1.02 }}>
               <StatsPaper>
-                <Typography variant="h6" fontWeight="bold" mb={2} textAlign="left">
+                <Typography variant="h6" fontWeight="bold" mb={2} textAlign="left" color="#ffffff">
                   Quick Actions
                 </Typography>
                 <Box display="flex" flexDirection="column" gap={2}>
@@ -438,7 +439,7 @@ const Dashboard = () => {
           <Grid item xs={12}>
             <motion.div whileHover={{ scale: 1.02 }}>
               <StatsPaper>
-                <Typography variant="h6" fontWeight="bold" mb={2}>
+                <Typography variant="h6" fontWeight="bold" mb={2} color="#ffffff">
                   Recent Activity
                 </Typography>
                 <List>
