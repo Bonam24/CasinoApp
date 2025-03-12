@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useRef, useEffect } from "react";
 import { FaBasketballBall } from "react-icons/fa";
 import QRCode from "qrcode";
@@ -11,6 +10,9 @@ import matchesData from './matchesData.json';
 
 const leagues = [
   { id: "nba", name: "NBA", icon: <FaBasketballBall className="text-yellow-400 text-4xl" /> },
+  { id: "uefa", name: "UEFA", icon: <img src="/images/uefa-logo.png" alt="UEFA Logo" className="w-10 h-10" /> },
+  { id: "premier-league", name: "Premier League", icon: <img src="/images/premier-league-logo.png" alt="Premier League Logo" className="w-10 h-10" /> },
+  { id: "la-liga", name: "La Liga", icon: <img src="/images/la-liga-logo.png" alt="La Liga Logo" className="w-10 h-10" /> },
 ];
 
 export default function BettingPage() {
@@ -21,6 +23,7 @@ export default function BettingPage() {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
+  const [showBetSlip, setShowBetSlip] = useState(false);
   const receiptRef = useRef(null);
 
   // Set current date and time on client side
@@ -104,6 +107,11 @@ export default function BettingPage() {
       // Add a small delay to ensure the QR code is rendered
       setTimeout(() => {
         generateReceiptPDF();
+
+        // Clear the bet slip and reset states after generating the PDF
+        setBetSlip([]);
+        setSelectedBet({});
+        setBetAmount("");
       }, 500); // 500ms delay
     });
   };
@@ -215,18 +223,19 @@ export default function BettingPage() {
                     </span>
                   </div>
 
+                  {/* Match Details and Betting Odds */}
                   <div className="grid grid-cols-12 items-center gap-4">
                     {/* Match Details */}
-                    <div className="col-span-4 flex items-center gap-2">
+                    <div className="col-span-12 sm:col-span-4 flex items-center gap-2">
                       <h2 className="text-sm font-semibold">{match.team1.name} vs {match.team2.name}</h2>
                     </div>
 
                     {/* Betting Odds */}
-                    <div className="col-span-5 flex justify-around">
+                    <div className="col-span-12 sm:col-span-5 flex justify-around">
                       {Object.entries(match.odds).map(([type, odd]) => (
                         <button
                           key={type}
-                          className={`px-4 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
+                          className={`px-3 py-1 sm:px-4 sm:py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
                             selectedBet[match.id] === type
                               ? "bg-teal-500 text-white"
                               : "bg-gray-700 hover:bg-teal-400 hover:text-black"
@@ -234,17 +243,17 @@ export default function BettingPage() {
                           onClick={() => handlePlaceBet(match, type)}
                         >
                           {type === "team1" ? match.team1.name : type === "team2" ? match.team2.name : "Draw"} <br />
-                          <span className="text-lg font-bold">{odd}</span>
+                          <span className="text-sm sm:text-lg font-bold">{odd}</span>
                         </button>
                       ))}
                     </div>
 
                     {/* AI Prediction & More Bets Buttons */}
-                    <div className="col-span-3 flex gap-2">
-                      <button className="px-4 py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg">
+                    <div className="col-span-12 sm:col-span-3 flex gap-2">
+                      <button className="px-3 py-1 sm:px-4 sm:py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg">
                         AI Prediction
                       </button>
-                      <button className="px-4 py-2 text-xs bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg">
+                      <button className="px-3 py-1 sm:px-4 sm:py-2 text-xs bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg">
                         More Bets
                       </button>
                     </div>
@@ -258,7 +267,17 @@ export default function BettingPage() {
         </div>
 
         {/* Bet Slip */}
-        <div className="w-96 bg-gray-800 p-4 rounded-lg shadow-lg h-auto">
+        <div
+          className={`fixed lg:relative lg:w-96 bg-gray-800 p-4 rounded-lg shadow-lg h-auto ${
+            showBetSlip ? 'block' : 'hidden'
+          } lg:block`}
+          style={{
+            top: showBetSlip ? '50%' : 'auto',
+            left: showBetSlip ? '50%' : 'auto',
+            transform: showBetSlip ? 'translate(-50%, -50%)' : 'none',
+            zIndex: showBetSlip ? 1000 : 'auto',
+          }}
+        >
           <h2 className="text-xl font-bold text-teal-400 mb-4">Your Bet Slip</h2>
           <div className="flex-1">
             {betSlip.length > 0 ? (
@@ -321,8 +340,16 @@ export default function BettingPage() {
         </div>
       </div>
 
+      {/* Floating Button for Small Screens */}
+      <button
+        onClick={() => setShowBetSlip(!showBetSlip)}
+        className="fixed bottom-4 right-4 p-4 bg-teal-500 text-white rounded-full shadow-lg lg:hidden"
+      >
+        {showBetSlip ? "Hide Bet Slip" : "Show Bet Slip"}
+      </button>
+
       {/* Receipt (Hidden) */}
-      <div ref={receiptRef} className="invisible">
+      <div ref={receiptRef} className="absolute -left-[9999px]">
         <div className="p-6 bg-white text-black rounded-lg shadow-lg relative">
           {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-10">

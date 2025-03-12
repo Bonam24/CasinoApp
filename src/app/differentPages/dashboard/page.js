@@ -127,9 +127,9 @@ const Dashboard = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // ✅ Send token in Authorization header
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({}), // Empty body, but needed for POST request
+          body: JSON.stringify({}), 
         });
 
         if (!response.ok) {
