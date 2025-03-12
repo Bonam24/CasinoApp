@@ -1,9 +1,7 @@
 // pages/api/signup.js
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL; // Use server-side environment variable
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; // Use server-side environment variable
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/app/components/utils/supabase/supabaseClient";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
