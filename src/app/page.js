@@ -7,15 +7,16 @@ import Footer from "./components/footer/footer";
 import Chatbot from "./components/middlepart/chatbot";
 //import Leagues from "./components/middlepart/displaySportsLeagueAndTabs/leagueDisplay";
 //import TabsOfSports from "./components/middlepart/displaySportsLeagueAndTabs/tabsOfSports";
-import DisplaySportsLeagueAndTabs from "./components/middlepart/displaySportsLeagueAndTabs/tabsAndLeaguesCombined";
+
+import LeagueSlider from "./components/middlepart/displayleaguelogo/slidingLeagueLogo";
 
 export default function Home() {
   return (
     <div>
       <HeaderPlusMarquee/>
       <LogoWithDescription/>
+      <LeagueSlider/>
       <Chatbot/>
-      <DisplaySportsLeagueAndTabs/>
       <Footer/>    
     </div>
   );

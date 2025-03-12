@@ -10,9 +10,9 @@ import matchesData from './matchesData.json';
 
 const leagues = [
   { id: "nba", name: "NBA", icon: <FaBasketballBall className="text-yellow-400 text-4xl" /> },
-  { id: "uefa", name: "UEFA", icon: <img src="/images/uefa-logo.png" alt="UEFA Logo" className="w-10 h-10" /> },
-  { id: "premier-league", name: "Premier League", icon: <img src="/images/premier-league-logo.png" alt="Premier League Logo" className="w-10 h-10" /> },
-  { id: "la-liga", name: "La Liga", icon: <img src="/images/la-liga-logo.png" alt="La Liga Logo" className="w-10 h-10" /> },
+  { id: "uefa", name: "UEFA", icon: <img src="/images/uefa.jpg" alt="UEFA Logo" className="w-10 h-10" /> },
+  { id: "premier-league", name: "Premier League", icon: <img src="/images/premierleague.png" alt="Premier League Logo" className="w-10 h-10" /> },
+  { id: "la-liga", name: "La Liga", icon: <img src="/images/laliga.png" alt="La Liga Logo" className="w-10 h-10" /> },
 ];
 
 export default function BettingPage() {
@@ -168,15 +168,15 @@ export default function BettingPage() {
             alt="Bundlesbets Logo"
             className="w-10 h-10"
           />
-          <span className="text-2xl font-bold">Bundlesbets AI Agent</span>
+          <span className="text-xl sm:text-2xl font-bold">Bundlesbets AI Agent</span>
         </div>
 
         {/* Right Side: Dashboard Link */}
         <a
           href="/differentPages/dashboard" // Replace with your dashboard route
-          className="text-lg font-semibold hover:underline"
+          className="text-sm sm:text-lg font-semibold hover:underline"
         >
-          Back to Dashboard
+           Dashboard
         </a>
       </div>
 
@@ -268,7 +268,7 @@ export default function BettingPage() {
 
         {/* Bet Slip */}
         <div
-          className={`fixed lg:relative lg:w-96 bg-gray-800 p-4 rounded-lg shadow-lg h-auto ${
+          className={`fixed lg:relative w-11/12 sm:w-96 bg-gray-800 p-4 rounded-lg shadow-lg h-auto ${
             showBetSlip ? 'block' : 'hidden'
           } lg:block`}
           style={{
@@ -315,13 +315,13 @@ export default function BettingPage() {
             <div className="flex justify-between gap-2">
               <button
                 onClick={handleCancelAllBets}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePlaceAllBets}
-                className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+                className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 text-sm"
               >
                 Place Bet
               </button>
