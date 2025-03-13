@@ -112,39 +112,31 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        console.log("Fetching user data...");
+        // Get the current authenticated user
+        const { data: user, error: authError } = await supabase.auth.getUser();
 
-        // Get the current session token
-        const { data: session } = await supabase.auth.getSession();
-        if (!session?.session?.access_token) {
-          console.error("No session found.");
-          throw new Error("Unauthorized: No session");
+        if (authError) {
+          throw authError;
         }
 
-        const token = session.session.access_token;
+        // Fetch user data from the `profiles` table
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("first_name, balance") // Include the balance field
+          .eq("id", user.user.id) // Match the user's ID
+          .single(); // Return a single record
 
-        const response = await fetch("/api/dashboardBackend", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({}), 
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch user data: ${response.statusText}`);
+        if (profileError) {
+          throw profileError;
         }
 
-        const { firstName, balance } = await response.json();
-        console.log("User data:", { firstName, balance });
-
-        setUserName(firstName);
-        setBalance(balance);
+        // Set the user's name and balance
+        setUserName(profile.first_name || "Guest");
+        setBalance(profile.balance || 0); // Set the balance (default to 0 if not available)
       } catch (error) {
-        console.error("Error fetching user data:", error);
-        setUserName("Guest");
-        setBalance(0);
+        console.error("Failed to fetch user data:", error);
+        setUserName("Guest"); // Fallback to "Guest" if the request fails
+        setBalance(0); // Fallback to 0 if the request fails
       }
     };
 
