@@ -51,8 +51,11 @@ import {
   Redeem,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { logout } from "../loginPage/action"; // Import the logout function
-import { supabase } from "../../components/utils/supabase/supabaseClient";
+import {logout} from '../../../../authentication/authenticate'
+import { useRouter } from "next/navigation";
+import { getDatabase, ref, get } from "firebase/database";
+import { auth, database } from "../../../../firebaseConfig"; // Import Firebase auth instance
+
 
 // Custom styled components
 const DashboardPaper = styled(Paper)(({ theme }) => ({
@@ -107,45 +110,40 @@ const Dashboard = () => {
   const [userName, setUserName] = useState(""); // State to store the user's name
   const [balance, setBalance] = useState(0); // State to store the user's balance
   const open = Boolean(anchorEl);
+  const router = useRouter();
 
-  // Fetch user data on component mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Get the current authenticated user
-        const { data: user, error: authError } = await supabase.auth.getUser();
+   // Fetch user profile data on component mount
+   useEffect(() => {
+    const fetchUserProfile = async () => {
+      const user = auth.currentUser; // Get the currently logged-in user
+      if (user) {
+        const database = getDatabase(); // Initialize Realtime Database
+        const userRef = ref(database, `profiles/${user.uid}`); // Reference to the user's profile
 
-        if (authError) {
-          throw authError;
+        try {
+          const snapshot = await get(userRef); // Fetch data from the database
+          if (snapshot.exists()) {
+            const profileData = snapshot.val(); // Get the profile data
+            setUserName(profileData.firstName || "Guest"); // Set the user's name
+            setBalance(profileData.balance || 0); // Set the user's balance
+          } else {
+            console.log("No profile data found for this user.");
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
         }
-
-        // Fetch user data from the `profiles` table
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("first_name, balance") // Include the balance field
-          .eq("id", user.user.id) // Match the user's ID
-          .single(); // Return a single record
-
-        if (profileError) {
-          throw profileError;
-        }
-
-        // Set the user's name and balance
-        setUserName(profile.first_name || "Guest");
-        setBalance(profile.balance || 0); // Set the balance (default to 0 if not available)
-      } catch (error) {
-        console.error("Failed to fetch user data:", error);
-        setUserName("Guest"); // Fallback to "Guest" if the request fails
-        setBalance(0); // Fallback to 0 if the request fails
+      } else {
+        console.log("No user is logged in.");
       }
     };
 
-    fetchUserData();
+    fetchUserProfile();
   }, []);
 
   // Handle logout
   const handleLogout = async () => {
     await logout(); // Call the logout function
+    router.push("/differentPages/loginPage");
   };
 
   // Sample data for the bar chart (for different weeks)

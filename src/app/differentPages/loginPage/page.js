@@ -13,14 +13,17 @@ import {
   Grid,
   InputAdornment,
   IconButton,
+  Modal,
+  CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import { motion } from "framer-motion";
-import { Visibility, VisibilityOff } from "@mui/icons-material"; // Import icons for show/hide password
-import { useRouter } from "next/navigation"; // Import useRouter from Next.js
-import SuccessModal from "./loginComponents/successModal"; // Import the SuccessModal component
-
-
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
+import SuccessModal from "./loginComponents/successModal";
+import { auth,database } from "../../../../firebaseConfig"; // Import Firebase auth instance
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { ref, set } from "firebase/database"; 
 
 const CustomButton = styled(Button)({
   backgroundColor: "#13dfae",
@@ -69,12 +72,14 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State to toggle confirm password visibility
-  const [countries, setCountries] = useState([]); // State to store the list of countries
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [countries, setCountries] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false); // State for password reset modal
+  const [resetEmail, setResetEmail] = useState(""); // State for reset email input
 
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
   const today = new Date().toISOString().split("T")[0];
   const minDate = new Date();
@@ -87,13 +92,12 @@ const Login = () => {
       try {
         const response = await fetch("https://restcountries.com/v3.1/all");
         const data = await response.json();
-        // Map and sort countries alphabetically by name
         const countryList = data
           .map((country) => ({
             name: country.name.common,
             code: country.cca2,
           }))
-          .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+          .sort((a, b) => a.name.localeCompare(b.name));
         setCountries(countryList);
       } catch (error) {
         console.error("Error fetching countries:", error);
@@ -106,40 +110,28 @@ const Login = () => {
   // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(`Updating ${name} to ${value}`); // Debugging
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle login submission
+  // Handle login with Firebase
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-  
+
     if (!formData.email || !formData.password) {
       setMessage("Please provide both email and password.");
       setLoading(false);
       return;
     }
-  
+
     try {
-      const response = await fetch("/api/loginAPI", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to login");
-      }
-  
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      const user = userCredential.user;
       setMessage("Login successful! Redirecting...");
       router.push("/differentPages/dashboard"); // Redirect to the dashboard
     } catch (error) {
@@ -149,62 +141,92 @@ const Login = () => {
     }
   };
 
-  // Handle signup submission
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  // Handle sign-up with Firebase
+  // Import Realtime Database functions
+
+// ... (other imports and code)
+
+// Import Realtime Database functions
+
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
+
+  if (
+    !formData.firstName ||
+    !formData.lastName ||
+    !formData.email ||
+    !formData.dob ||
+    !formData.password
+  ) {
+    setMessage("All fields are required");
+    setLoading(false);
+    return;
+  }
+
+  if (formData.password !== formData.confirmPassword) {
+    setMessage("Passwords do not match");
+    setLoading(false);
+    return;
+  }
+
+  try {
+    // Create user with Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      formData.email,
+      formData.password
+    );
+    const user = userCredential.user;
+
+    // Save user profile data to Realtime Database
+    const profileData = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      dob: formData.dob,
+      balance: 0, // Default balance
+      userId: user.uid, // Firebase Authentication user ID
+    };
+
+    // Save to the "profiles" table in Realtime Database
+    await set(ref(database, `profiles/${user.uid}`), profileData);
+
+    // Open the success modal
+    setIsModalOpen(true);
+
+    // Reset the form
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      country: "USA",
+      dob: "",
+      password: "",
+      confirmPassword: "",
+    });
+  } catch (error) {
+    setMessage(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // Handle password reset
+  const handleResetPassword = async () => {
+    if (!resetEmail) {
+      setMessage("Please enter your email address.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
-  
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.dob ||
-      !formData.password
-    ) {
-      setMessage("All fields are required");
-      setLoading(false);
-      return;
-    }
-  
-    if (formData.password !== formData.confirmPassword) {
-      setMessage("Passwords do not match");
-      setLoading(false);
-      return;
-    }
-  
+
     try {
-      const response = await fetch("/api/signupAPI", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          country: formData.country,
-          dob: formData.dob,
-          password: formData.password,
-        }),
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to sign up");
-      }
-  
-      setIsModalOpen(true); // Open the success modal
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        country: "USA",
-        dob: "",
-        password: "",
-        confirmPassword: "",
-      });
+      await sendPasswordResetEmail(auth, resetEmail);
+      setMessage("Password reset email sent! Check your inbox.");
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -263,8 +285,8 @@ const Login = () => {
                 fullWidth
                 label="Email"
                 name="email"
-                value={formData.email} // Bind to formData.email
-                onChange={handleChange} // Update formData on change
+                value={formData.email}
+                onChange={handleChange}
                 margin="normal"
                 variant="outlined"
                 required
@@ -274,8 +296,8 @@ const Login = () => {
                 label="Password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                value={formData.password} // Bind to formData.password
-                onChange={handleChange} // Update formData on change
+                value={formData.password}
+                onChange={handleChange}
                 margin="normal"
                 variant="outlined"
                 required
@@ -290,7 +312,9 @@ const Login = () => {
                 }}
               />
               <Box display="flex" justifyContent="space-between" mt={1}>
-                <Link href="#" variant="body2">Forgot Password?</Link>
+                <Link href="#" variant="body2" onClick={() => setIsResetModalOpen(true)}>
+                  Forgot Password?
+                </Link>
                 <Typography variant="body2">
                   Don't have an account? <Link href="#" onClick={() => setTab(1)}>Sign Up</Link>
                 </Typography>
@@ -318,7 +342,6 @@ const Login = () => {
                 <Grid item xs={12}>
                   <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} margin="normal" variant="outlined" required />
                 </Grid>
-                {/* Country Field */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     select
@@ -338,7 +361,6 @@ const Login = () => {
                     ))}
                   </TextField>
                 </Grid>
-                {/* Date of Birth Field */}
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
@@ -353,7 +375,6 @@ const Login = () => {
                     helperText="Please enter your date of birth"
                   />
                 </Grid>
-                {/* Password Field */}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
@@ -376,7 +397,6 @@ const Login = () => {
                     }}
                   />
                 </Grid>
-                {/* Confirm Password Field */}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
@@ -399,7 +419,6 @@ const Login = () => {
                     }}
                   />
                 </Grid>
-                {/* Password Match Indicator */}
                 {formData.confirmPassword && (
                   <Grid item xs={12}>
                     <Typography color={passwordsMatch ? "green" : "red"}>
@@ -422,9 +441,49 @@ const Login = () => {
       {/* Success Modal */}
       <SuccessModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)} // Close the modal
-        onRedirect={handleRedirectToLogin} // Pass the redirection callback
+        onClose={() => setIsModalOpen(false)}
+        onRedirect={handleRedirectToLogin}
       />
+
+      {/* Password Reset Modal */}
+      <Modal open={isResetModalOpen} onClose={() => setIsResetModalOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" mb={2}>
+            Reset Password
+          </Typography>
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+            margin="normal"
+            required
+          />
+          <Box mt={2}>
+            <CustomButton fullWidth onClick={handleResetPassword} disabled={loading}>
+              {loading ? <CircularProgress size={24} /> : "Send Reset Email"}
+            </CustomButton>
+          </Box>
+          {message && (
+            <Typography color={message.includes("sent") ? "green" : "red"} mt={2}>
+              {message}
+            </Typography>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 };

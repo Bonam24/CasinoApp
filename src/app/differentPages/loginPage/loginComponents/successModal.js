@@ -31,11 +31,7 @@ const SuccessModal = ({ open, onClose, onRedirect }) => {
       >
         <Box sx={modalStyle}>
           <Typography variant="h5" fontWeight="bold" mb={3} sx={{ color: "#333" }}>
-            🎉 Registration Successful!
-          </Typography>
-          <Typography variant="body1" mb={4} sx={{ color: "#555", fontSize: "1.1rem" }}>
-            Please check your email and click on the verification link to complete
-            your registration.
+            🎉 Registration Successful! You can now sign in
           </Typography>
           <Button
             variant="contained"
