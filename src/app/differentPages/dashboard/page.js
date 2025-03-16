@@ -55,6 +55,7 @@ import {logout} from '../../../../authentication/authenticate'
 import { useRouter } from "next/navigation";
 import { getDatabase, ref, get } from "firebase/database";
 import { auth, database } from "../../../../firebaseConfig"; // Import Firebase auth instance
+import { onAuthStateChanged } from "firebase/auth"; 
 
 
 // Custom styled components
@@ -114,31 +115,39 @@ const Dashboard = () => {
 
    // Fetch user profile data on component mount
    useEffect(() => {
-    const fetchUserProfile = async () => {
-      const user = auth.currentUser; // Get the currently logged-in user
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const database = getDatabase(); // Initialize Realtime Database
-        const userRef = ref(database, `profiles/${user.uid}`); // Reference to the user's profile
-
-        try {
-          const snapshot = await get(userRef); // Fetch data from the database
-          if (snapshot.exists()) {
-            const profileData = snapshot.val(); // Get the profile data
-            setUserName(profileData.firstName || "Guest"); // Set the user's name
-            setBalance(profileData.balance || 0); // Set the user's balance
-          } else {
-            console.log("No profile data found for this user.");
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
+        // User is signed in
+        fetchUserProfile(user.uid); // Fetch user profile data
       } else {
-        console.log("No user is logged in.");
+        // User is signed out
+        setUserName("Guest"); // Reset to default
+        setBalance(0); // Reset to default
       }
-    };
+    });
 
-    fetchUserProfile();
+    // Cleanup the listener when the component unmounts
+    return () => unsubscribe();
   }, []);
+
+  // Fetch user profile data from Realtime Database
+  const fetchUserProfile = async (userId) => {
+    const database = getDatabase(); // Initialize Realtime Database
+    const userRef = ref(database, `profiles/${userId}`); // Reference to the user's profile
+
+    try {
+      const snapshot = await get(userRef); // Fetch data from the database
+      if (snapshot.exists()) {
+        const profileData = snapshot.val(); // Get the profile data
+        setUserName(profileData.firstName || "Guest"); // Set the user's name
+        setBalance(profileData.balance || 0); // Set the user's balance
+      } else {
+        console.log("No profile data found for this user.");
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
 
   // Handle logout
   const handleLogout = async () => {
