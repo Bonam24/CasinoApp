@@ -152,7 +152,7 @@ const Dashboard = () => {
   // Handle logout
   const handleLogout = async () => {
     await logout(); // Call the logout function
-    router.push("/differentPages/loginPage");
+    router.push("/otherPages/loginPage");
   };
 
   // Sample data for the bar chart (for different weeks)
@@ -422,7 +422,7 @@ const Dashboard = () => {
                   Quick Actions
                 </Typography>
                 <Box display="flex" flexDirection="column" gap={2}>
-                  <CustomButton startIcon={<AddCircleOutline />} href="/differentPages/displayGames">Place a Bet</CustomButton>
+                  <CustomButton startIcon={<AddCircleOutline />} href="/otherPages/displayGames">Place a Bet</CustomButton>
                   <CustomButton startIcon={<History />}>Recent Bets</CustomButton>
                   <CustomButton startIcon={<AccountBalance />}>Deposit Funds</CustomButton>
                   <CustomButton startIcon={<LocalAtm />}>Withdraw Funds</CustomButton>

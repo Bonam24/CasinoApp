@@ -5,7 +5,7 @@ import {AppBar,Toolbar,Typography,Tabs,Tab,Box,Button,useMediaQuery,IconButton,D
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
-import PaymentGatewaySelector from '../middlepart/paymentGateways/paymentSelection';
+
 
 export default function Header() {
   const [value, setValue] = useState(1);
@@ -225,19 +225,7 @@ export default function Header() {
       </Button>
     </Box>
   </Box>
-</Drawer>
-
-       {/* Wallet Connection Dialog */}
-       <Dialog open={walletDialogOpen} onClose={handleWalletDialogClose}>
-        <DialogTitle>Connect Wallet</DialogTitle>
-        <DialogContent>
-          <Typography>Select your wallet provider to connect:</Typography>
-          <PaymentGatewaySelector />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleWalletDialogClose} color="error">Close</Button>
-        </DialogActions>
-      </Dialog>
+</Drawer>     
     </AppBar>
   );
 }

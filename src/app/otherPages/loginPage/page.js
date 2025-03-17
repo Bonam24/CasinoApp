@@ -20,7 +20,7 @@ import { styled } from "@mui/system";
 import { motion } from "framer-motion";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
-import SuccessModal from "./loginComponents/successModal";
+import SuccessModal from "../../components/loginComponents/successModal";
 import { auth,database } from "../../../../firebaseConfig"; // Import Firebase auth instance
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { ref, set } from "firebase/database"; 
@@ -133,7 +133,7 @@ const Login = () => {
       );
       const user = userCredential.user;
       setMessage("Login successful! Redirecting...");
-      router.push("/differentPages/dashboard"); // Redirect to the dashboard
+      router.push("/otherPages/dashboard"); // Redirect to the dashboard
     } catch (error) {
       setMessage(error.message);
     } finally {

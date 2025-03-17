@@ -173,7 +173,7 @@ export default function BettingPage() {
 
         {/* Right Side: Dashboard Link */}
         <a
-          href="/differentPages/dashboard" // Replace with your dashboard route
+          href="/otherPages/dashboard" // Replace with your dashboard route
           className="text-sm sm:text-lg font-semibold hover:underline"
         >
            Dashboard

@@ -1,21 +1,21 @@
 "use client"
 import React from "react";
 
-import LogoWithDescription from "./components/middlepart/logoWithDescription";
-import HeaderPlusMarquee from "./components/header components/headerplusMarquee";
-import Footer from "./components/footer/footer";
-import Chatbot from "./components/middlepart/chatbot";
-//import Leagues from "./components/middlepart/displaySportsLeagueAndTabs/leagueDisplay";
-//import TabsOfSports from "./components/middlepart/displaySportsLeagueAndTabs/tabsOfSports";
+import LogoWithDescription from "./components/mainPage/middlepart/logoWithDescription";
+import Footer from "./components/mainPage/footer/footer";
+import Chatbot from "./components/mainPage/middlepart/chatbot";
+import HeaderPlusMarquee from "./components/mainPage/header components/headerplusMarquee";
+import LeagueCard from "./components/mainPage/middlepart/displaySportsLeagueAndTabs/leagueCard";
 
-import LeagueSlider from "./components/middlepart/displayleaguelogo/slidingLeagueLogo";
+
+
 
 export default function Home() {
   return (
     <div>
       <HeaderPlusMarquee/>
       <LogoWithDescription/>
-      <LeagueSlider/>
+      <LeagueCard/>
       <Chatbot/>
       <Footer/>    
     </div>

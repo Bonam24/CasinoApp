@@ -84,7 +84,7 @@ export default function WelcomeSection() {
               fontSize: { xs: '0.8rem', sm: '1rem' },
               padding: '8px 16px',
             }}
-            href='./differentPages/loginPage'
+            href='./otherPages/loginPage'
           >
             LOGIN
           </Button>
