@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Paper, Grid, Snackbar, Alert } from '@mui/material';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -81,7 +81,7 @@ const Dashboard = () => {
         BundlesBets Betting Platform Dashboard
       </Typography>
 
-      {/* Winner Notification */}
+      {/* Winner Notification */ /*}
       <Snackbar
         open={!!winnerNotification}
         autoHideDuration={6000}
@@ -94,7 +94,7 @@ const Dashboard = () => {
       </Snackbar>
 
       <Grid container spacing={3}>
-        {/* Key Metrics */}
+        {/* Key Metrics *//*}
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#ffffff', borderRadius: 2, boxShadow: 3 }}>
             <Typography variant="h6" sx={{ color: '#616161' }}>Total Revenue</Typography>
@@ -114,7 +114,7 @@ const Dashboard = () => {
           </Paper>
         </Grid>
 
-        {/* Revenue Chart */}
+        {/* Revenue Chart *//*}
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 2, backgroundColor: '#ffffff', borderRadius: 2, boxShadow: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1a237e' }}>
@@ -132,7 +132,7 @@ const Dashboard = () => {
           </Paper>
         </Grid>
 
-        {/* User Activity Chart */}
+        {/* User Activity Chart *//*}
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 2, backgroundColor: '#ffffff', borderRadius: 2, boxShadow: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1a237e' }}>
@@ -161,7 +161,7 @@ const Dashboard = () => {
           </Paper>
         </Grid>
 
-        {/* Geographical Usage Heatmap */}
+        {/* Geographical Usage Heatmap *//*}
         <Grid item xs={12}>
           <Paper sx={{ p: 2, backgroundColor: '#ffffff', borderRadius: 2, boxShadow: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: '#1a237e' }}>
@@ -185,4 +185,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard;*/
