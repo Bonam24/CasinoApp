@@ -1,19 +1,13 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { FaBasketballBall } from "react-icons/fa";
+import { FaHome } from "react-icons/fa"; // Import FaHome for the dashboard icon
 import QRCode from "qrcode";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 // Import the JSON data
-import matchesData from './matchesData.json';
-
-const leagues = [
-  { id: "nba", name: "NBA", icon: <FaBasketballBall className="text-yellow-400 text-4xl" /> },
-  { id: "uefa", name: "UEFA", icon: <img src="/images/uefa.jpg" alt="UEFA Logo" className="w-10 h-10" /> },
-  { id: "premier-league", name: "Premier League", icon: <img src="/images/premierleague.png" alt="Premier League Logo" className="w-10 h-10" /> },
-  { id: "la-liga", name: "La Liga", icon: <img src="/images/laliga.png" alt="La Liga Logo" className="w-10 h-10" /> },
-];
+import leaguesData from '@/app/components/mainPage/leagues/leagueFixtures.json'; // Import the leagues data
+import SelectLeague from "@/app/components/fixtureDisplay/selectLeague";
 
 export default function BettingPage() {
   const [selectedLeague, setSelectedLeague] = useState(null);
@@ -24,7 +18,18 @@ export default function BettingPage() {
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
   const [showBetSlip, setShowBetSlip] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // Track the current page
+  const [matches, setMatches] = useState([]); // Store fetched matches
+  const matchesPerPage = 20; // Number of matches to display per page
   const receiptRef = useRef(null);
+
+  // Generate a unique transaction ID (client-side only)
+  const generateTransactionId = () => {
+    if (typeof window === "undefined") return ""; // Skip on the server
+    const timestamp = Date.now(); // Current timestamp
+    const randomString = Math.random().toString(36).substring(2, 8); // Random 6-character string
+    return `txn_${timestamp}_${randomString}`; // Combine timestamp and random string
+  };
 
   // Set current date and time on client side
   useEffect(() => {
@@ -46,23 +51,54 @@ export default function BettingPage() {
     );
   }, []);
 
-  const filteredMatches = selectedLeague
-    ? matchesData.filter((match) => match.league === selectedLeague)
-    : matchesData;
+  // Fetch matches for the selected league
+  useEffect(() => {
+    if (selectedLeague) {
+      const fetchMatches = async () => {
+        const league = leaguesData.leagues.find((league) => league.id === selectedLeague);
+        if (league) {
+          try {
+            const response = await fetch(league.endpoint, {
+              headers: {
+                'x-apisports-key': process.env.NEXT_PUBLIC_SPORTS_API_KEY, // Replace with your API key
+              },
+            });
+            const data = await response.json();
+            setMatches(data.response || []); // Set the fetched matches
+          } catch (error) {
+            console.error("Error fetching matches:", error);
+            setMatches([]); // Reset matches if there's an error
+          }
+        }
+      };
+
+      fetchMatches();
+    } else {
+      setMatches([]); // Reset matches if no league is selected
+    }
+  }, [selectedLeague]);
+
+  // Calculate the total number of pages
+  const totalPages = Math.ceil(matches.length / matchesPerPage);
+
+  // Get the matches for the current page
+  const indexOfLastMatch = currentPage * matchesPerPage;
+  const indexOfFirstMatch = indexOfLastMatch - matchesPerPage;
+  const currentMatches = matches.slice(indexOfFirstMatch, indexOfLastMatch);
 
   const handlePlaceBet = (match, betType) => {
-    setSelectedBet((prev) => ({ ...prev, [match.id]: betType }));
+    setSelectedBet((prev) => ({ ...prev, [match.fixture.id]: betType }));
     const selectedBet = {
-      matchId: match.id,
-      teams: { home: match.team1.name, away: match.team2.name },
+      matchId: match.fixture.id,
+      teams: { home: match.teams.home.name, away: match.teams.away.name },
       betType,
       odds: match.odds[betType],
     };
 
     setBetSlip((prev) => {
-      const existingBet = prev.find((bet) => bet.matchId === match.id);
+      const existingBet = prev.find((bet) => bet.matchId === match.fixture.id);
       if (existingBet) {
-        return prev.map((bet) => (bet.matchId === match.id ? selectedBet : bet));
+        return prev.map((bet) => (bet.matchId === match.fixture.id ? selectedBet : bet));
       }
       return [...prev, selectedBet];
     });
@@ -84,18 +120,28 @@ export default function BettingPage() {
     setQrCodeDataUrl("");
   };
 
-  const handlePlaceAllBets = () => {
+  const handlePlaceAllBets = async () => {
     if (betSlip.length === 0 || !betAmount) {
       alert("Please add bets and enter a bet amount.");
       return;
     }
 
-    // Generate QR code data
-    const qrCodeData = JSON.stringify({
+    // Generate a unique transaction ID (client-side only)
+    const transactionId = generateTransactionId();
+
+    // Save the bet slip data to a server (mock implementation)
+    const betData = {
+      transactionId,
       bets: betSlip,
       betAmount,
       potentialReturn: calculatePotentialReturn(),
-    });
+    };
+
+    // Simulate saving to a server
+    console.log("Saving bet data to server:", betData);
+
+    // Generate QR code data with only the transaction ID
+    const qrCodeData = transactionId; // Only the transaction ID is encoded
 
     QRCode.toDataURL(qrCodeData, { errorCorrectionLevel: 'H' }, (err, url) => {
       if (err) {
@@ -139,12 +185,47 @@ export default function BettingPage() {
       logging: true,
     }).then((canvas) => {
       console.log("Canvas created successfully.");
-      const imgData = canvas.toDataURL("image/png");
+
       const pdf = new jsPDF("p", "mm", "a4");
       const imgWidth = 190; // A4 width in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+      // Check if content exceeds one page
+      if (imgHeight > 280) { // Approximate height of an A4 page in mm
+        // Reduce the size of the content to fit on one page
+        const scaleFactor = 280 / imgHeight;
+        pdf.addImage(
+          canvas.toDataURL("image/png"),
+          "PNG",
+          10, // x position
+          10, // y position
+          imgWidth * scaleFactor,
+          imgHeight * scaleFactor
+        );
+      } else {
+        // Add the content to the PDF as is
+        pdf.addImage(
+          canvas.toDataURL("image/png"),
+          "PNG",
+          10, // x position
+          10, // y position
+          imgWidth,
+          imgHeight
+        );
+      }
+
+      // Add the QR code at the bottom of the page
+      if (qrCodeDataUrl) {
+        const qrCodeHeight = 50; // Height of the QR code in mm
+        const qrCodeWidth = 50; // Width of the QR code in mm
+        const qrCodeX = (pdf.internal.pageSize.width - qrCodeWidth) / 2; // Center the QR code horizontally
+        const qrCodeY = pdf.internal.pageSize.height - qrCodeHeight - 20; // Position the QR code at the bottom
+
+        pdf.setFontSize(12); // Reduce font size for QR code label
+        pdf.text("Scan QR Code for Bet Details", qrCodeX, qrCodeY - 10); // Add label above the QR code
+        pdf.addImage(qrCodeDataUrl, "PNG", qrCodeX, qrCodeY, qrCodeWidth, qrCodeHeight); // Add the QR code
+      }
+
       pdf.save("betting_receipt.pdf");
       console.log("PDF saved successfully.");
 
@@ -157,118 +238,101 @@ export default function BettingPage() {
     });
   };
 
+  // Handle pagination
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col">
+    <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col">
       {/* Header */}
-      <div className="bg-teal-500 text-white p-4 rounded-lg shadow-lg mb-6 flex justify-between items-center">
-        {/* Left Side: Logo and Text */}
+      <div className="bg-teal-500 text-white p-4 rounded-lg shadow-lg mb-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <img
-            src="/images/BundlesBetsLogo.png" // Replace with your logo path
+            src="/images/BundlesBetsLogo.png"
             alt="Bundlesbets Logo"
             className="w-10 h-10"
           />
           <span className="text-xl sm:text-2xl font-bold">Bundlesbets AI Agent</span>
         </div>
-
-        {/* Right Side: Dashboard Link */}
+        {/* Replace "Dashboard" text with a dashboard icon */}
         <a
-          href="/otherPages/dashboard" // Replace with your dashboard route
+          href="/otherPages/dashboard"
           className="text-sm sm:text-lg font-semibold hover:underline"
         >
-           Dashboard
+          <FaHome className="text-2xl" /> {/* Dashboard icon */}
         </a>
       </div>
 
-      {/* League Selector in Header */}
-      <div className="flex justify-center gap-6 mb-6">
-        {leagues.map((league) => (
-          <button
-            key={league.id}
-            className={`p-3 rounded-full transition ${
-              selectedLeague === league.id ? "bg-teal-500" : "bg-gray-800 hover:bg-gray-700"
-            }`}
-            onClick={() => setSelectedLeague(selectedLeague === league.id ? null : league.id)}
-          >
-            {league.icon}
-          </button>
-        ))}
-      </div>
+      {/* League Selector */}
+      <SelectLeague onSelectLeague={setSelectedLeague} />
 
-      {/* Main content */}
-      <div className="flex gap-6 flex-1">
-        <div className="flex-1">
-          {/* Matches List */}
-          <div className="overflow-y-auto max-h-[65vh]">
-            {filteredMatches.length > 0 ? (
-              filteredMatches.map((match) => (
-                <div
-                  key={match.id}
-                  className={`p-4 rounded-lg mb-4 shadow-lg transition-all duration-200 ${
-                    selectedBet[match.id] ? "bg-teal-900" : "bg-gray-800"
-                  }`}
-                >
-                  <div className="flex justify-between items-center border-b border-gray-700 pb-2 mb-3">
-                    <span className="text-xs text-gray-400">
-                      {new Date(match.date).toLocaleDateString('en-US', {
+      {/* Main Content */}
+      <div className="flex flex-col lg:flex-row gap-4 flex-1">
+        {/* Matches List */}
+        <div className="flex-1 overflow-y-auto max-h-[65vh]">
+          {currentMatches.length > 0 ? (
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="p-2 text-left">Date</th>
+                  <th className="p-2 text-left">Match</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentMatches.map((match) => (
+                  <tr key={match.fixture.id} className="border-b border-gray-700">
+                    <td className="p-2">
+                      {new Date(match.fixture.date).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: '2-digit',
                         day: '2-digit',
-                      })} | {new Date(match.date).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                        hour12: true,
                       })}
-                    </span>
-                  </div>
+                    </td>
+                    <td className="p-2">
+                      {match.teams.home.name} vs {match.teams.away.name}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-center text-gray-400">No matches available for this league.</p>
+          )}
 
-                  {/* Match Details and Betting Odds */}
-                  <div className="grid grid-cols-12 items-center gap-4">
-                    {/* Match Details */}
-                    <div className="col-span-12 sm:col-span-4 flex items-center gap-2">
-                      <h2 className="text-sm font-semibold">{match.team1.name} vs {match.team2.name}</h2>
-                    </div>
-
-                    {/* Betting Odds */}
-                    <div className="col-span-12 sm:col-span-5 flex justify-around">
-                      {Object.entries(match.odds).map(([type, odd]) => (
-                        <button
-                          key={type}
-                          className={`px-3 py-1 sm:px-4 sm:py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
-                            selectedBet[match.id] === type
-                              ? "bg-teal-500 text-white"
-                              : "bg-gray-700 hover:bg-teal-400 hover:text-black"
-                          }`}
-                          onClick={() => handlePlaceBet(match, type)}
-                        >
-                          {type === "team1" ? match.team1.name : type === "team2" ? match.team2.name : "Draw"} <br />
-                          <span className="text-sm sm:text-lg font-bold">{odd}</span>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* AI Prediction & More Bets Buttons */}
-                    <div className="col-span-12 sm:col-span-3 flex gap-2">
-                      <button className="px-3 py-1 sm:px-4 sm:py-2 text-xs bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg">
-                        AI Prediction
-                      </button>
-                      <button className="px-3 py-1 sm:px-4 sm:py-2 text-xs bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg">
-                        More Bets
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-400">No matches available for this league.</p>
-            )}
+          {/* Pagination Controls */}
+          <div className="flex justify-center gap-4 mt-4">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:bg-gray-500"
+            >
+              Previous
+            </button>
+            <span className="text-lg text-gray-400">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 disabled:bg-gray-500"
+            >
+              Next
+            </button>
           </div>
         </div>
 
         {/* Bet Slip */}
         <div
-          className={`fixed lg:relative w-11/12 sm:w-96 bg-gray-800 p-4 rounded-lg shadow-lg h-auto ${
+          className={`fixed lg:relative w-full lg:w-96 bg-gray-800 p-4 rounded-lg shadow-lg h-auto ${
             showBetSlip ? 'block' : 'hidden'
           } lg:block`}
           style={{
@@ -279,7 +343,7 @@ export default function BettingPage() {
           }}
         >
           <h2 className="text-xl font-bold text-teal-400 mb-4">Your Bet Slip</h2>
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto max-h-[60vh]">
             {betSlip.length > 0 ? (
               betSlip.map((bet, index) => (
                 <div
@@ -287,7 +351,9 @@ export default function BettingPage() {
                   className="flex justify-between items-center p-3 mb-3 rounded-lg bg-gray-700"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">{bet.teams.home} vs {bet.teams.away}</span>
+                    <span className="text-sm">
+                      {bet.teams.home} vs {bet.teams.away}
+                    </span>
                   </div>
                   <span className="text-sm font-bold">{bet.odds}</span>
                   <button
@@ -351,23 +417,37 @@ export default function BettingPage() {
       {/* Receipt (Hidden) */}
       <div ref={receiptRef} className="absolute -left-[9999px]">
         <div className="p-6 bg-white text-black rounded-lg shadow-lg relative">
-          {/* Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-10">
             <span className="text-6xl font-bold text-gray-300 rotate-45">Bundlesbets</span>
           </div>
-
-          {/* Receipt Content */}
           <div className="relative">
             <h1 className="text-3xl font-bold text-center mb-4 text-teal-500">Bundlesbets Receipt</h1>
             <div className="border-b border-gray-300 pb-4 mb-4">
               <p className="text-lg text-gray-600">Date: {currentDate}</p>
               <p className="text-lg text-gray-600">Time: {currentTime}</p>
+              <p className="text-lg text-gray-600">Transaction ID: {generateTransactionId()}</p> {/* Display the transaction ID */}
             </div>
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-2 text-teal-500">Bets</h2>
               {betSlip.map((bet, index) => (
                 <div key={index} className="flex justify-between items-center mb-2">
-                  <p className="text-lg">{bet.teams.home} vs {bet.teams.away}</p>
+                  <p className="text-lg">
+                    <span
+                      style={{
+                        color: bet.betType === "home" ? "green" : "black",
+                      }}
+                    >
+                      {bet.teams.home}
+                    </span>{" "}
+                    vs{" "}
+                    <span
+                      style={{
+                        color: bet.betType === "away" ? "green" : "black",
+                      }}
+                    >
+                      {bet.teams.away}
+                    </span>
+                  </p>
                   <p className="text-lg font-bold">Odds: {bet.odds}</p>
                 </div>
               ))}
@@ -378,16 +458,20 @@ export default function BettingPage() {
             </div>
             <div className="flex flex-col items-center">
               {qrCodeDataUrl && (
-                <img
-                  src={qrCodeDataUrl}
-                  alt="QR Code"
-                  className="w-32 h-32"
-                  onLoad={() => {
-                    console.log("QR code loaded successfully.");
-                  }}
-                />
+                <>
+                  <img
+                    src={qrCodeDataUrl}
+                    alt="QR Code"
+                    className="w-32 h-32"
+                    onLoad={() => {
+                      console.log("QR code loaded successfully.");
+                    }}
+                  />
+                  <p className="text-lg text-gray-600 mt-2">
+                    Scan the QR code to view your bet details.
+                  </p>
+                </>
               )}
-              <p className="text-lg text-gray-600 mt-2">Thank you for playing with Bundlesbets</p>
             </div>
           </div>
         </div>

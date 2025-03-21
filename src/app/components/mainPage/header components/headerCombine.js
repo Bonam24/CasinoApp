@@ -117,9 +117,9 @@ export default function Header() {
                 borderColor: '#00cc7a',
               },
             }}
-            onClick={handleWalletDialogOpen}
+            href='/otherPages/adminDashboard'
           >
-            Connect Wallet
+            Admin
           </Button>
         )}
 
@@ -220,8 +220,9 @@ export default function Header() {
             borderColor: '#00cc7a',
           },
         }}
+        href='/otherPages/adminDashboard'
       >
-        Connect Wallet
+        Admin
       </Button>
     </Box>
   </Box>

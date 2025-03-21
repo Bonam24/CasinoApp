@@ -11,7 +11,7 @@ const LeagueCard = () => {
   useEffect(() => {
     const fetchLeagueData = async () => {
       try {
-        const response = await axios.get('https://v3.football.api-sports.io/leagues?id=39', {
+        const response = await axios.get('https://v3.football.api-sports.io/leagues?id=78', {
           headers: {
             'x-apisports-key': 'aa2a46cd86fefe10bf10a5358b1769a3',
           },
