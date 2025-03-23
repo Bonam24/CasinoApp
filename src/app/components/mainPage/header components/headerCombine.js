@@ -119,7 +119,7 @@ export default function Header() {
             }}
             href='/otherPages/adminDashboard'
           >
-            Admin
+            Connect Wallet
           </Button>
         )}
 
@@ -220,9 +220,9 @@ export default function Header() {
             borderColor: '#00cc7a',
           },
         }}
-        href='/otherPages/adminDashboard'
+        href='/'
       >
-        Admin
+        Connect Wallet
       </Button>
     </Box>
   </Box>
