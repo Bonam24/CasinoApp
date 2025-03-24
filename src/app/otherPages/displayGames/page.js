@@ -49,7 +49,7 @@ export default function BettingPage() {
   const [showBetSlip, setShowBetSlip] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [matches, setMatches] = useState([]);
-  const [showReceipt, setShowReceipt] = useState(false); // New state to control receipt visibility
+  const [showReceipt, setShowReceipt] = useState(false);
   const matchesPerPage = 20;
   const receiptRef = useRef(null);
 
@@ -204,13 +204,13 @@ export default function BettingPage() {
         return;
       }
       setQrCodeDataUrl(url);
-      setShowReceipt(true); // Show the receipt before generating the PDF
+      setShowReceipt(true);
       setTimeout(() => {
         generateReceiptPDF();
         setBetSlip([]);
         setSelectedBet({});
         setBetAmount("");
-        setShowReceipt(false); // Hide the receipt after generating the PDF
+        setShowReceipt(false);
       }, 500);
     });
   };
@@ -231,26 +231,24 @@ export default function BettingPage() {
     html2canvas(receiptElement, {
       useCORS: true,
       logging: true,
-      scale: 2, // Increase scale for better quality
+      scale: 2,
       windowWidth: receiptElement.scrollWidth,
       windowHeight: receiptElement.scrollHeight,
     })
       .then((canvas) => {
         const pdf = new jsPDF("p", "mm", "a4");
-        const imgWidth = 190; // A4 width in mm (210mm - 20mm margins)
+        const imgWidth = 190;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
   
-        // Add receipt content
         pdf.addImage(
           canvas.toDataURL("image/png"),
           "PNG",
-          10, // X position (left margin)
-          10, // Y position (top margin)
+          10,
+          10,
           imgWidth,
           imgHeight
         );
   
-        // Add QR Code at the bottom
         if (qrCodeDataUrl) {
           const qrCodeHeight = 50;
           const qrCodeWidth = 50;
@@ -269,7 +267,6 @@ export default function BettingPage() {
           );
         }
   
-        // Save the PDF
         pdf.save("betting_receipt.pdf");
       })
       .catch((error) => {
@@ -318,11 +315,10 @@ export default function BettingPage() {
               value={selectedLeague}
               label="Select League"
               onChange={(e) => setSelectedLeague(e.target.value)}
-              className="text-white"
               sx={{
-                backgroundColor: "#111",
-                color: "white",
-                "& .MuiSelect-icon": { color: "white" },
+                backgroundColor: "white",
+                color: "black",
+                "& .MuiSelect-icon": { color: "black" },
               }}
               renderValue={(selected) => {
                 const selectedLeagueData = leagues.find((league) => league.endpoint === selected);
@@ -333,13 +329,13 @@ export default function BettingPage() {
                       alt={selectedLeagueData?.name}
                       sx={{ width: 24, height: 24 }}
                     />
-                    {selectedLeagueData?.name}
+                    <span style={{ color: "black" }}>{selectedLeagueData?.name}</span>
                   </div>
                 );
               }}
             >
               {leagues.map((league) => (
-                <MenuItem key={league.endpoint} value={league.endpoint} className="text-white">
+                <MenuItem key={league.endpoint} value={league.endpoint} sx={{ color: "black" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <Avatar src={league.logo} alt={league.name} sx={{ width: 24, height: 24 }} />
                     {league.name}
@@ -367,7 +363,7 @@ export default function BettingPage() {
                     <TableRow key={match.fixture.id} className="hover:bg-[#1E3A8A]/90 transition-colors">
                       <TableCell>
                         <div className="flex flex-col">
-                          <Typography variant="body2" className="text-gray-200 mb-2">
+                          <Typography variant="body2" className="text-gray-500 mb-2">
                             {new Date(match.fixture.date).toLocaleDateString()} -{" "}
                             {new Date(match.fixture.date).toLocaleTimeString()}
                           </Typography>
@@ -378,18 +374,18 @@ export default function BettingPage() {
                                 alt={match.teams.home.name}
                                 sx={{ width: isSmallScreen ? 16 : 24, height: isSmallScreen ? 16 : 24 }}
                               />
-                              <Typography className="text-white" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
+                              <Typography className="text-black" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
                                 {match.teams.home.name}
                               </Typography>
                             </div>
-                            <Typography className="text-white">vs</Typography>
+                            <Typography className="text-black">vs</Typography>
                             <div className="flex items-center gap-2">
                               <Avatar
                                 src={match.teams.away.logo}
                                 alt={match.teams.away.name}
                                 sx={{ width: isSmallScreen ? 16 : 24, height: isSmallScreen ? 16 : 24 }}
                               />
-                              <Typography className="text-white" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
+                              <Typography className="text-black" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
                                 {match.teams.away.name}
                               </Typography>
                             </div>
@@ -493,74 +489,119 @@ export default function BettingPage() {
 
         {/* Bet Slip Section */}
         {!isSmallScreen ? (
-          <Box sx={{ flex: 1, backgroundColor: "gray.800", padding: 2, borderRadius: 2, border: "1px solid #1E3A8A" }}>
+          <Box sx={{ 
+            flex: 1, 
+            backgroundColor: "gray.800", 
+            padding: 2, 
+            borderRadius: 2, 
+            border: "1px solid #1E3A8A",
+            display: "flex",
+            flexDirection: "column",
+            maxHeight: "calc(100vh - 200px)",
+            overflow: "hidden"
+          }}>
             <Typography variant="h6" className="text-white mb-4">
               Bet Slip
             </Typography>
-            {betSlip.length > 0 ? (
-              <div>
-                {betSlip.map((bet) => (
-                  <Card key={bet.matchId} className="mb-4 bg-gray-700 border border-[#1E3A8A]">
-                    <CardContent className="p-3">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <Typography className="text-white" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
-                            {bet.teams.home} vs {bet.teams.away}
-                          </Typography>
-                          <Typography className="text-white text-sm">
-                            Bet: {bet.betType === "home" ? "Home Win" : bet.betType === "draw" ? "Draw" : "Away Win"} | Odds: {bet.odds}
-                          </Typography>
+            <Box sx={{ 
+              flex: 1, 
+              overflowY: "auto",
+              mb: 2,
+              "&::-webkit-scrollbar": {
+                width: "6px",
+              },
+              "&::-webkit-scrollbar-track": {
+                background: "#2D3748",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                background: "#4A5568",
+                borderRadius: "3px",
+              },
+              "&::-webkit-scrollbar-thumb:hover": {
+                background: "#718096",
+              }
+            }}>
+              {betSlip.length > 0 ? (
+                <div>
+                  {betSlip.map((bet) => (
+                    <Card key={bet.matchId} className="mb-4 bg-gray-700 border border-[#1E3A8A]">
+                      <CardContent className="p-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <Typography className="text-black" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
+                              {bet.teams.home} vs {bet.teams.away}
+                            </Typography>
+                            <Typography className="text-black text-sm">
+                              Bet: {bet.betType === "home" ? "Home Win" : bet.betType === "draw" ? "Draw" : "Away Win"} | Odds: {bet.odds}
+                            </Typography>
+                          </div>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            onClick={() => handleRemoveBet(bet.matchId)}
+                            className="ml-2"
+                            size={isSmallScreen ? "small" : "medium"}
+                          >
+                            Remove
+                          </Button>
                         </div>
-                        <Button
-                          variant="contained"
-                          color="error"
-                          onClick={() => handleRemoveBet(bet.matchId)}
-                          className="ml-2"
-                          size={isSmallScreen ? "small" : "medium"}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                <TextField
-                  label="Bet Amount"
-                  type="number"
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(e.target.value)}
-                  className="w-full mb-4"
-                  InputProps={{
-                    className: "text-white",
-                  }}
-                />
-                <Typography className="text-white mb-4">
-                  Potential Return: {calculatePotentialReturn()}
-                </Typography>
-                <div className="flex gap-2">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handlePlaceAllBets}
-                    className="flex-1"
-                  >
-                    Place Bet
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleCancelAllBets}
-                    className="flex-1"
-                  >
-                    Reset
-                  </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </div>
-            ) : (
-              <Typography className="text-gray-400">
-                No bets added yet.
+              ) : (
+                <Typography className="text-gray-400 text-center py-4">
+                  No bets added yet.
+                </Typography>
+              )}
+            </Box>
+            <Box sx={{ mt: "auto" }}>
+              <TextField
+                label="Bet Amount"
+                type="number"
+                value={betAmount}
+                onChange={(e) => setBetAmount(e.target.value)}
+                className="w-full mb-4"
+                sx={{
+                  backgroundColor: "white",
+                  "& .MuiInputBase-input": {
+                    color: "black",
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "black",
+                  },
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "gray",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "black",
+                    },
+                  },
+                }}
+              />
+              <Typography className="text-white mb-4">
+                Potential Return: {calculatePotentialReturn()}
               </Typography>
-            )}
+              <div className="flex gap-2">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handlePlaceAllBets}
+                  className="flex-1"
+                >
+                  Place Bet
+                </Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleCancelAllBets}
+                  className="flex-1"
+                >
+                  Reset
+                </Button>
+              </div>
+            </Box>
           </Box>
         ) : (
           <>
@@ -597,76 +638,112 @@ export default function BettingPage() {
                   borderRadius: "8px 8px 0 0",
                   boxShadow: 3,
                   maxHeight: "60vh",
-                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
                 <Typography variant="h6" className="text-white mb-4">
                   Bet Slip
                 </Typography>
-                {betSlip.length > 0 ? (
-                  <div>
-                    {betSlip.map((bet) => (
-                      <Card key={bet.matchId} className="mb-4 bg-gray-700 border border-[#1E3A8A]">
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <Typography className="text-white" sx={{ fontSize: "0.875rem" }}>
-                                {bet.teams.home} vs {bet.teams.away}
-                              </Typography>
-                              <Typography className="text-white text-sm">
-                                Bet: {bet.betType === "home" ? "Home Win" : bet.betType === "draw" ? "Draw" : "Away Win"} | Odds: {bet.odds}
-                              </Typography>
+                <Box sx={{ 
+                  flex: 1,
+                  overflowY: "auto",
+                  mb: 2,
+                  "&::-webkit-scrollbar": {
+                    width: "6px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "#2D3748",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "#4A5568",
+                    borderRadius: "3px",
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    background: "#718096",
+                  }
+                }}>
+                  {betSlip.length > 0 ? (
+                    <div>
+                      {betSlip.map((bet) => (
+                        <Card key={bet.matchId} className="mb-4 bg-gray-700 border border-[#1E3A8A]">
+                          <CardContent className="p-3">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <Typography className="text-black" sx={{ fontSize: "0.875rem" }}>
+                                  {bet.teams.home} vs {bet.teams.away}
+                                </Typography>
+                                <Typography className="text-black text-sm">
+                                  Bet: {bet.betType === "home" ? "Home Win" : bet.betType === "draw" ? "Draw" : "Away Win"} | Odds: {bet.odds}
+                                </Typography>
+                              </div>
+                              <Button
+                                variant="contained"
+                                color="error"
+                                onClick={() => handleRemoveBet(bet.matchId)}
+                                className="ml-2"
+                                size="small"
+                              >
+                                Remove
+                              </Button>
                             </div>
-                            <Button
-                              variant="contained"
-                              color="error"
-                              onClick={() => handleRemoveBet(bet.matchId)}
-                              className="ml-2"
-                              size="small"
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    <TextField
-                      label="Bet Amount"
-                      type="number"
-                      value={betAmount}
-                      onChange={(e) => setBetAmount(e.target.value)}
-                      className="w-full mb-4"
-                      InputProps={{
-                        className: "text-white",
-                      }}
-                    />
-                    <Typography className="text-white mb-4">
-                      Potential Return: {calculatePotentialReturn()}
-                    </Typography>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handlePlaceAllBets}
-                        className="flex-1"
-                      >
-                        Place Bet
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={handleCancelAllBets}
-                        className="flex-1"
-                      >
-                        Reset
-                      </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  </div>
-                ) : (
-                  <Typography className="text-gray-400">
-                    No bets added yet.
+                  ) : (
+                    <Typography className="text-gray-400 text-center py-4">
+                      No bets added yet.
+                    </Typography>
+                  )}
+                </Box>
+                <Box>
+                  <TextField
+                    label="Bet Amount"
+                    type="number"
+                    value={betAmount}
+                    onChange={(e) => setBetAmount(e.target.value)}
+                    className="w-full mb-4"
+                    sx={{
+                      backgroundColor: "white",
+                      "& .MuiInputBase-input": {
+                        color: "black",
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "black",
+                      },
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": {
+                          borderColor: "gray",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "black",
+                        },
+                      },
+                    }}
+                  />
+                  <Typography className="text-white mb-4">
+                    Potential Return: {calculatePotentialReturn()}
                   </Typography>
-                )}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handlePlaceAllBets}
+                      className="flex-1"
+                    >
+                      Place Bet
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={handleCancelAllBets}
+                      className="flex-1"
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </Box>
               </Box>
             )}
           </>
@@ -675,96 +752,90 @@ export default function BettingPage() {
 
       {/* Conditionally Render Receipt */}
       {showReceipt && (
-  <div ref={receiptRef} className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="w-full h-full p-8 bg-white text-black rounded-lg shadow-lg flex flex-col justify-between">
-      {/* Heading */}
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold" style={{ color: "#13dfae" }}>
-          Bundlesbets
-        </h2>
-        <p className="text-lg text-gray-600 mt-2">Betting Receipt</p>
-      </div>
+        <div ref={receiptRef} className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="w-full h-full p-8 bg-white text-black rounded-lg shadow-lg flex flex-col justify-between">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold" style={{ color: "#13dfae" }}>
+                Bundlesbets
+              </h2>
+              <p className="text-lg text-gray-600 mt-2">Betting Receipt</p>
+            </div>
 
-      {/* Transaction Details */}
-      <div className="mb-8">
-        <div className="flex justify-between mb-3">
-          <span className="text-gray-600">Date:</span>
-          <span className="font-semibold">{currentDate}</span>
-        </div>
-        <div className="flex justify-between mb-3">
-          <span className="text-gray-600">Time:</span>
-          <span className="font-semibold">{currentTime}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Transaction ID:</span>
-          <span className="font-semibold">{generateTransactionId()}</span>
-        </div>
-      </div>
+            <div className="mb-8">
+              <div className="flex justify-between mb-3">
+                <span className="text-gray-600">Date:</span>
+                <span className="font-semibold">{currentDate}</span>
+              </div>
+              <div className="flex justify-between mb-3">
+                <span className="text-gray-600">Time:</span>
+                <span className="font-semibold">{currentTime}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Transaction ID:</span>
+                <span className="font-semibold">{generateTransactionId()}</span>
+              </div>
+            </div>
 
-      {/* Bet Details */}
-      <div className="mb-8 flex-1 overflow-y-auto">
-        <h3 className="text-2xl font-semibold mb-4" style={{ color: "#13dfae" }}>
-          Bet Details
-        </h3>
-        {betSlip.map((bet) => (
-          <div key={bet.matchId} className="mb-4 pb-4 border-b border-gray-200">
-            <p className="text-xl font-semibold">
-              {bet.teams.home} vs {bet.teams.away}
-            </p>
-            <p className="text-lg text-gray-600 mt-1">
-              Bet:{" "}
-              {bet.betType === "home"
-                ? "Home Win"
-                : bet.betType === "draw"
-                ? "Draw"
-                : "Away Win"}{" "}
-              | Odds: {bet.odds}
-            </p>
-            <p className="text-lg text-gray-600 mt-1">
-              Date: {bet.date} | Time: {bet.time}
-            </p>
+            <div className="mb-8 flex-1 overflow-y-auto">
+              <h3 className="text-2xl font-semibold mb-4" style={{ color: "#13dfae" }}>
+                Bet Details
+              </h3>
+              {betSlip.map((bet) => (
+                <div key={bet.matchId} className="mb-4 pb-4 border-b border-gray-200">
+                  <p className="text-xl font-semibold">
+                    {bet.teams.home} vs {bet.teams.away}
+                  </p>
+                  <p className="text-lg text-gray-600 mt-1">
+                    Bet:{" "}
+                    {bet.betType === "home"
+                      ? "Home Win"
+                      : bet.betType === "draw"
+                      ? "Draw"
+                      : "Away Win"}{" "}
+                    | Odds: {bet.odds}
+                  </p>
+                  <p className="text-lg text-gray-600 mt-1">
+                    Date: {bet.date} | Time: {bet.time}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mb-8">
+              <div className="flex justify-between mb-3">
+                <span className="text-gray-600">Bet Amount:</span>
+                <span className="font-semibold">${betAmount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Potential Return:</span>
+                <span className="font-semibold">${calculatePotentialReturn()}</span>
+              </div>
+            </div>
+
+            {qrCodeDataUrl && (
+              <div className="text-center mt-8">
+                <p className="text-lg text-gray-600 mb-3">
+                  Scan the QR code to view your bet details
+                </p>
+                <img
+                  src={qrCodeDataUrl}
+                  alt="QR Code"
+                  className="w-48 h-48 mx-auto"
+                />
+              </div>
+            )}
+
+            <div className="text-center mt-8">
+              <p className="text-lg text-gray-600">
+                Thank you for using Bundlesbets!
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                For support, contact us at support@bundlesbets.com
+              </p>
+            </div>
           </div>
-        ))}
-      </div>
-
-      {/* Bet Amount and Potential Return */}
-      <div className="mb-8">
-        <div className="flex justify-between mb-3">
-          <span className="text-gray-600">Bet Amount:</span>
-          <span className="font-semibold">${betAmount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Potential Return:</span>
-          <span className="font-semibold">${calculatePotentialReturn()}</span>
-        </div>
-      </div>
-
-      {/* QR Code Section */}
-      {qrCodeDataUrl && (
-        <div className="text-center mt-8">
-          <p className="text-lg text-gray-600 mb-3">
-            Scan the QR code to view your bet details
-          </p>
-          <img
-            src={qrCodeDataUrl}
-            alt="QR Code"
-            className="w-48 h-48 mx-auto"
-          />
         </div>
       )}
-
-      {/* Footer */}
-      <div className="text-center mt-8">
-        <p className="text-lg text-gray-600">
-          Thank you for using Bundlesbets!
-        </p>
-        <p className="text-sm text-gray-500 mt-2">
-          For support, contact us at support@bundlesbets.com
-        </p>
-      </div>
-    </div>
-  </div>
-)}
     </div>
   );
 }
