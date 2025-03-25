@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, CircularProgress, Grid, Card, CardMedia, CardContent } from '@mui/material';
+import { Box, Typography, CircularProgress, Grid, Card, CardMedia, CardContent, useMediaQuery } from '@mui/material';
 
 const leaguesData = {
   leagues: [
@@ -11,8 +11,8 @@ const leaguesData = {
     { name: 'Eredivisie', endpoint: 'https://v3.football.api-sports.io/leagues?id=88' },
     { name: 'Primeira Liga', endpoint: 'https://v3.football.api-sports.io/leagues?id=94' },
     { name: 'MLS', endpoint: 'https://v3.football.api-sports.io/leagues?id=253' },
-    {name:"UEFA champions league", endpoint:"https://v3.football.api-sports.io/leagues?id=2"},
-    {name:"Europa League", endpoint:"https://v3.football.api-sports.io/leagues?id=3"},
+    { name: "UEFA Champions League", endpoint: "https://v3.football.api-sports.io/leagues?id=2" },
+    { name: "Europa League", endpoint: "https://v3.football.api-sports.io/leagues?id=3" },
   ],
 };
 
@@ -20,6 +20,7 @@ const LeagueInfo = () => {
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isSmallScreen = useMediaQuery('(max-width:600px)');
 
   useEffect(() => {
     const fetchAllLeagues = async () => {
@@ -36,7 +37,7 @@ const LeagueInfo = () => {
           }
 
           const data = await response.json();
-          return data.response[0]; // Assuming the API returns an array with one league object
+          return data.response[0];
         });
 
         const leagueResults = await Promise.all(leaguePromises);
@@ -68,47 +69,47 @@ const LeagueInfo = () => {
   }
 
   return (
-    <Box p={4}>
+    <Box p={isSmallScreen ? 2 : 4}>
       <Typography
-        variant="h4"
+        variant={isSmallScreen ? "h5" : "h4"}
         align="center"
         gutterBottom
         sx={{
           fontWeight: 'bold',
-          color: '#13dfae', // Use the teal color for the heading
-          mb: 4,
+          color: '#13dfae',
+          mb: isSmallScreen ? 2 : 4,
           textTransform: 'uppercase',
-          letterSpacing: '2px',
+          letterSpacing: '1px',
         }}
       >
         Football Leagues
       </Typography>
-      <Grid container spacing={3} justifyContent="center">
+      <Grid container spacing={isSmallScreen ? 1 : 3} justifyContent="center">
         {leagues.map((league, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
+          <Grid item xs={6} md={3} key={index}> {/* Changed to xs=6 (2 per row) and md=3 (4 per row) */}
             <Card
               sx={{
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                borderRadius: '12px',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                 transition: 'transform 0.2s, box-shadow 0.2s',
-                border: '2px solid transparent',
+                border: '1px solid transparent',
                 '&:hover': {
-                  transform: 'scale(1.05)',
-                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
-                  borderColor: '#13dfae', // Add a teal border on hover
+                  transform: 'scale(1.03)',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                  borderColor: '#13dfae',
                 },
               }}
             >
               <CardMedia
                 component="img"
                 sx={{
-                  height: '120px',
+                  height: isSmallScreen ? '80px' : '120px',
                   objectFit: 'contain',
-                  p: 2,
-                  backgroundColor: '#f5f5f5', // Light gray background for the logo
+                  p: isSmallScreen ? 1 : 2,
+                  backgroundColor: '#f5f5f5',
                 }}
                 image={league.league.logo}
                 alt={league.league.name}
@@ -117,17 +118,17 @@ const LeagueInfo = () => {
                 sx={{
                   flexGrow: 1,
                   textAlign: 'center',
-                  p: 2,
-                  backgroundColor: '#223', // White background for the content
+                  p: isSmallScreen ? 1 : 2,
+                  backgroundColor: '#223',
                 }}
               >
                 <Typography
-                  variant="subtitle1"
+                  variant={isSmallScreen ? "body2" : "subtitle1"}
                   sx={{
                     fontWeight: 'bold',
                     color: '#13dfae',
                     textTransform: 'uppercase',
-                    letterSpacing: '1px',
+                    fontSize: isSmallScreen ? '0.7rem' : '0.875rem',
                   }}
                 >
                   {league.league.name}

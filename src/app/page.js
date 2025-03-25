@@ -6,7 +6,10 @@ import Footer from "./components/mainPage/footer/footer";
 import Chatbot from "./components/mainPage/middlepart/chatbot";
 import HeaderPlusMarquee from "./components/mainPage/header components/headerplusMarquee";
 import LeagueInfo from "./components/mainPage/leagues/individualLeague";
-import SelectLeague from "./components/fixtureDisplay/selectLeague";
+import SportsTabs from "./components/mainPage/leagues/tabbedView";
+import SportsLeaguesCombined from "./components/mainPage/leagues/combinedTabsAndLeagueDisplay";
+
+
 
 
 
@@ -18,7 +21,7 @@ export default function Home() {
     <div>
       <HeaderPlusMarquee/>
       <LogoWithDescription/>
-      <LeagueInfo/>
+      <SportsLeaguesCombined/>
       <Chatbot/>
       <Footer/>    
     </div>

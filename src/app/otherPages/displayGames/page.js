@@ -28,6 +28,8 @@ const initialLeagues = [
   { name: "Eredivisie", endpoint: "https://v3.football.api-sports.io/leagues?id=88" },
   { name: "Primeira Liga", endpoint: "https://v3.football.api-sports.io/leagues?id=94" },
   { name: "MLS", endpoint: "https://v3.football.api-sports.io/leagues?id=253" },
+  {name:"UEFA champions league", endpoint:"https://v3.football.api-sports.io/leagues?id=2"},
+  {name:"Europa League", endpoint:"https://v3.football.api-sports.io/leagues?id=3"},
 ];
 
 export default function MatchesPage() {
