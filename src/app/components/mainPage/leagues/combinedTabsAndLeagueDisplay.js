@@ -87,25 +87,58 @@ const SportsLeaguesCombined = () => {
     { 
       name: 'Hockey', 
       leagues: [
-        { name: 'NHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=57' },
+        { name: 'AHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=58'},
+        { name: 'CHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=125'},
+        { name: 'ECHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=59'},
+        { name: 'FHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=61'},
+        { name: 'FPHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=260'},
+        { name: 'NCAA', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=256'},
+        { name: 'NHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=57'},
+        { name: 'SPHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=60'},
+        { name: 'USHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=62'},
       ] 
     },
     { 
       name: 'Baseball', 
       leagues: [
+        { name: 'FL', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=67' },
+        { name: 'IL', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=3' },
         { name: 'MLB', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=1' },
+        { name: 'MLB_Spring Training', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=71' },
+        { name: 'PCL', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=4' },
+        { name: 'Triple A-East', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=60' },
+        { name: 'Triple A national Championship', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=33' },
+        { name: 'Triple A West', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=61' },
+        
       ] 
     },
     { 
-      name: 'Golf', 
+      name: 'BasketBall', 
       leagues: [
-        { name: 'PGA Tour', endpoint: 'https://v1.golf.api-sports.io/leagues?id=1' },
+        { name: 'NBA', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=12' },
+        { name: 'NBA G-League', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=20' },
+        { name: 'NBA Sacramento Summer league', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=21' },
+        { name: 'NBA Cup', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=422' },
+        { name: 'NCAA', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=116' },
       ] 
     },
     { 
       name: 'Formula 1', 
       leagues: [
         { name: 'F1 World Championship', endpoint: 'https://v1.formula-1.api-sports.io/leagues?id=1' },
+      ] 
+    },
+    { 
+      name: 'Rugby', 
+      leagues: [
+        { name: 'Major League Rugby', endpoint: 'https://v1.rugby.api-sports.io/leagues?id=44' },
+        { name: 'Pro Rugby', endpoint: 'https://v1.rugby.api-sports.io/leagues?id=43' },
+      ] 
+    },
+    { 
+      name: 'AFL', 
+      leagues: [
+        { name: 'AFL Premiership', endpoint: 'https://v1.afl.api-sports.io/leagues?id=1' },
       ] 
     },
   ];
@@ -240,7 +273,7 @@ const SportsLeaguesCombined = () => {
                 fontWeight: 500,
                 fontSize: isSmallScreen ? '0.7rem' : '0.9rem',
                 textTransform: 'none',
-                minWidth: isSmallScreen ? '60px' : '80px',
+                minWidth: isSmallScreen ? '20px' : '80px',
                 px: isSmallScreen ? 1 : 2,
                 py: 1,
                 '&.Mui-selected': {
@@ -314,7 +347,7 @@ const SportsLeaguesCombined = () => {
                         height: isSmallScreen ? '70px' : '100px',
                         objectFit: 'contain',
                         p: isSmallScreen ? 0.5 : 1.5,
-                        backgroundColor: '#f5f5f5',
+                        backgroundColor: '#e1f7e7',
                       }}
                       image={league.logo}
                       alt={league.name}
