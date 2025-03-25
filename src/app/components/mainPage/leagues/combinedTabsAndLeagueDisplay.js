@@ -55,58 +55,39 @@ const SportsLeaguesCombined = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const isSmallScreen = useMediaQuery('(max-width:600px)');
-  const isMediumScreen = useMediaQuery('(max-width:900px)');
 
   const sportsData = [
     { 
       name: 'Football', 
       leagues: [
+        { name: 'Premier League', endpoint: 'https://v3.football.api-sports.io/leagues?id=39' },
+        { name: 'La Liga', endpoint: 'https://v3.football.api-sports.io/leagues?id=140' },
+        { name: 'Serie A', endpoint: 'https://v3.football.api-sports.io/leagues?id=135' },
+        { name: 'Bundesliga', endpoint: 'https://v3.football.api-sports.io/leagues?id=78' },
+        { name: 'Ligue 1', endpoint: 'https://v3.football.api-sports.io/leagues?id=61' },
+        { name: 'UEFA Champions League', endpoint: 'https://v3.football.api-sports.io/leagues?id=2' },
         {
-            "name": "Premier League",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=39"
-          },
-          {
-            "name": "La Liga",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=140"
-          },
-          {
-            "name": "Serie A",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=135"
-          },
-          {
-            "name": "Bundesliga",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=78"
-          },
-          {
-            "name": "Ligue 1",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=61"
-          },
-          {
-            "name": "Eredivisie",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=88"
-          },
-          {
-            "name": "Primeira Liga",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=94"
-          },
-          {
-            "name": "MLS",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=253"
-          },
-          {
-            "name": "UEFA Champions League",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=2"
-          },
-          {
-            "name": "Europa League",
-            "endpoint": "https://v3.football.api-sports.io/leagues?id=3"
-          },
+          name: "Primeira Liga",
+          endpoint: "https://v3.football.api-sports.io/leagues?id=94"
+        },
+        {
+          name: "MLS",
+          endpoint: "https://v3.football.api-sports.io/leagues?id=253"
+        },
+        {
+          name: "Eredivisie",
+        endpoint: "https://v3.football.api-sports.io/leagues?id=88"
+        },
+        {
+          name: "Europa league",
+        endpoint: "https://v3.football.api-sports.io/leagues?id=3"
+        },
       ] 
     },
     { 
       name: 'Hockey', 
       leagues: [
-        { "name": 'NHL', "endpoint": 'https://v1.hockey.api-sports.io/leagues?id=57' },
+        { name: 'NHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=57' },
       ] 
     },
     { 
@@ -124,7 +105,7 @@ const SportsLeaguesCombined = () => {
     { 
       name: 'Formula 1', 
       leagues: [
-        { "name": 'F1 World Championship', "endpoint": 'https://v1.formula1.api-sports.io/leagues?id=1' },
+        { name: 'F1 World Championship', endpoint: 'https://v1.formula-1.api-sports.io/leagues?id=1' },
       ] 
     },
   ];
@@ -134,22 +115,52 @@ const SportsLeaguesCombined = () => {
     fetchLeagues(sportsData[newValue].leagues);
   };
 
+  const getLeagueLogo = (leagueData, leagueName) => {
+    // Try different possible logo paths
+    if (leagueData.league?.logo) return leagueData.league.logo;
+    if (leagueData.logo) return leagueData.logo;
+    if (leagueData.flag) return leagueData.flag;
+    
+    // Fallback to placeholder with league initials
+    const initials = leagueName.split(' ').map(word => word[0]).join('');
+    return `https://via.placeholder.com/150/223/13dfae?text=${initials}`;
+  };
+
   const fetchLeagues = async (leagueEndpoints) => {
     setLoading(true);
     try {
       const leaguePromises = leagueEndpoints.map(async (league) => {
-        const response = await fetch(league.endpoint, {
-          headers: {
-            'x-apisports-key': 'aa2a46cd86fefe10bf10a5358b1769a3',
-          },
-        });
+        try {
+          const response = await fetch(league.endpoint, {
+            headers: {
+              'x-apisports-key': 'aa2a46cd86fefe10bf10a5358b1769a3',
+            },
+          });
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch data for ${league.name}`);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch data for ${league.name}`);
+          }
+
+          const data = await response.json();
+          if (!data.response || data.response.length === 0) return null;
+          
+          const leagueData = data.response[0];
+          
+          return {
+            id: leagueData.league?.id || leagueData.id || Math.random().toString(36).substr(2, 9),
+            name: leagueData.league?.name || leagueData.name || league.name,
+            logo: getLeagueLogo(leagueData, league.name),
+            originalData: leagueData
+          };
+        } catch (err) {
+          console.error(`Error fetching ${league.name}:`, err);
+          return {
+            id: Math.random().toString(36).substr(2, 9),
+            name: league.name,
+            logo: `https://via.placeholder.com/150/223/13dfae?text=${league.name.substring(0, 2)}`,
+            error: err.message
+          };
         }
-
-        const data = await response.json();
-        return data.response ? data.response[0] : null;
       });
 
       const leagueResults = await Promise.all(leaguePromises);
@@ -279,8 +290,8 @@ const SportsLeaguesCombined = () => {
             </Box>
           ) : (
             <Grid container spacing={isSmallScreen ? 1 : 2} justifyContent="center">
-              {leagues.map((league, index) => (
-                <Grid item xs={6} sm={4} md={3} key={index}>
+              {leagues.map((league) => (
+                <Grid item xs={6} sm={4} md={3} key={league.id}>
                   <Card
                     sx={{
                       height: '100%',
@@ -305,8 +316,11 @@ const SportsLeaguesCombined = () => {
                         p: isSmallScreen ? 0.5 : 1.5,
                         backgroundColor: '#f5f5f5',
                       }}
-                      image={league.league.logo}
-                      alt={league.league.name}
+                      image={league.logo}
+                      alt={league.name}
+                      onError={(e) => {
+                        e.target.src = `https://via.placeholder.com/150/223/13dfae?text=${league.name.substring(0, 2)}`;
+                      }}
                     />
                     <CardContent
                       sx={{
@@ -326,7 +340,7 @@ const SportsLeaguesCombined = () => {
                           lineHeight: 1.2
                         }}
                       >
-                        {league.league.name}
+                        {league.name}
                       </Typography>
                     </CardContent>
                   </Card>
