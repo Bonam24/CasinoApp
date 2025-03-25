@@ -1,29 +1,22 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { FaHome } from "react-icons/fa";
-import QRCode from "qrcode";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
+import { useState, useEffect } from "react";
+import { FaHome, FaChevronLeft, FaChevronRight, FaEllipsisV } from "react-icons/fa";
+import { 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel, 
   Typography,
   Avatar,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Box,
   Button,
-  TextField,
-  Card,
-  CardContent,
+  Menu,
+  MenuItem as MuiMenuItem,
   useMediaQuery,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from "@mui/material";
 
 const initialLeagues = [
@@ -37,23 +30,19 @@ const initialLeagues = [
   { name: "MLS", endpoint: "https://v3.football.api-sports.io/leagues?id=253" },
 ];
 
-export default function BettingPage() {
+export default function MatchesPage() {
   const [leagues, setLeagues] = useState([]);
   const [selectedLeague, setSelectedLeague] = useState(initialLeagues[0].endpoint);
-  const [selectedBet, setSelectedBet] = useState({});
-  const [betSlip, setBetSlip] = useState([]);
-  const [betAmount, setBetAmount] = useState("");
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState("");
-  const [currentDate, setCurrentDate] = useState("");
-  const [currentTime, setCurrentTime] = useState("");
-  const [showBetSlip, setShowBetSlip] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [matches, setMatches] = useState([]);
-  const [showReceipt, setShowReceipt] = useState(false);
-  const matchesPerPage = 20;
-  const receiptRef = useRef(null);
-
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [activeMatch, setActiveMatch] = useState(null);
+  const [betSlip, setBetSlip] = useState([]);
+  const [betAmount, setBetAmount] = useState("");
+  const [mobileBetSlipOpen, setMobileBetSlipOpen] = useState(false);
+  const matchesPerPage = 10;
   const isSmallScreen = useMediaQuery("(max-width:600px)");
+  const isMediumScreen = useMediaQuery("(max-width:900px)");
 
   useEffect(() => {
     const fetchLeagueLogos = async () => {
@@ -63,7 +52,7 @@ export default function BettingPage() {
             const response = await fetch(league.endpoint, {
               method: "GET",
               headers: {
-                "x-apisports-key": "aa2a46cd86fefe10bf10a5358b1769a3",
+                "x-apisports-key": process.env.NEXT_PUBLIC_SPORTS_API_KEY,
               },
             });
             if (!response.ok) throw new Error("Failed to fetch league data");
@@ -80,32 +69,6 @@ export default function BettingPage() {
     };
 
     fetchLeagueLogos();
-  }, []);
-
-  const generateTransactionId = () => {
-    if (typeof window === "undefined") return "";
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 8);
-    return `txn_${timestamp}_${randomString}`;
-  };
-
-  useEffect(() => {
-    const now = new Date();
-    setCurrentDate(
-      now.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      })
-    );
-    setCurrentTime(
-      now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      })
-    );
   }, []);
 
   useEffect(() => {
@@ -139,141 +102,6 @@ export default function BettingPage() {
   const indexOfFirstMatch = indexOfLastMatch - matchesPerPage;
   const currentMatches = matches.slice(indexOfFirstMatch, indexOfLastMatch);
 
-  const generateRandomOdds = () => {
-    return (Math.random() * 5 + 1).toFixed(2);
-  };
-
-  const handlePlaceBet = (match, betType) => {
-    const odds = generateRandomOdds();
-    setSelectedBet((prev) => ({ ...prev, [match.fixture.id]: betType }));
-    const selectedBet = {
-      matchId: match.fixture.id,
-      teams: { home: match.teams.home.name, away: match.teams.away.name },
-      betType,
-      odds: parseFloat(odds),
-      date: new Date(match.fixture.date).toLocaleDateString(),
-      time: new Date(match.fixture.date).toLocaleTimeString(),
-    };
-    setBetSlip((prev) => {
-      const existingBet = prev.find((bet) => bet.matchId === match.fixture.id);
-      if (existingBet) {
-        return prev.map((bet) =>
-          bet.matchId === match.fixture.id ? selectedBet : bet
-        );
-      }
-      return [...prev, selectedBet];
-    });
-  };
-
-  const handleRemoveBet = (matchId) => {
-    setBetSlip((prev) => prev.filter((bet) => bet.matchId !== matchId));
-    setSelectedBet((prev) => {
-      const updatedSelectedBet = { ...prev };
-      delete updatedSelectedBet[matchId];
-      return updatedSelectedBet;
-    });
-  };
-
-  const handleCancelAllBets = () => {
-    setBetSlip([]);
-    setSelectedBet({});
-    setBetAmount("");
-    setQrCodeDataUrl("");
-  };
-
-  const handlePlaceAllBets = async () => {
-    if (betSlip.length === 0 || !betAmount) {
-      alert("Please add bets and enter a bet amount.");
-      return;
-    }
-
-    const transactionId = generateTransactionId();
-    const betData = {
-      transactionId,
-      bets: betSlip,
-      betAmount,
-      potentialReturn: calculatePotentialReturn(),
-    };
-
-    console.log("Saving bet data to server:", betData);
-
-    const qrCodeData = transactionId;
-    QRCode.toDataURL(qrCodeData, { errorCorrectionLevel: "H" }, (err, url) => {
-      if (err) {
-        console.error("Error generating QR code:", err);
-        return;
-      }
-      setQrCodeDataUrl(url);
-      setShowReceipt(true);
-      setTimeout(() => {
-        generateReceiptPDF();
-        setBetSlip([]);
-        setSelectedBet({});
-        setBetAmount("");
-        setShowReceipt(false);
-      }, 500);
-    });
-  };
-
-  const calculatePotentialReturn = () => {
-    if (betSlip.length === 0 || !betAmount) return 0;
-    const totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
-    return betAmount * totalOdds;
-  };
-
-  const generateReceiptPDF = () => {
-    const receiptElement = receiptRef.current;
-    if (!receiptElement) {
-      console.error("Receipt element not found.");
-      return;
-    }
-  
-    html2canvas(receiptElement, {
-      useCORS: true,
-      logging: true,
-      scale: 2,
-      windowWidth: receiptElement.scrollWidth,
-      windowHeight: receiptElement.scrollHeight,
-    })
-      .then((canvas) => {
-        const pdf = new jsPDF("p", "mm", "a4");
-        const imgWidth = 190;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  
-        pdf.addImage(
-          canvas.toDataURL("image/png"),
-          "PNG",
-          10,
-          10,
-          imgWidth,
-          imgHeight
-        );
-  
-        if (qrCodeDataUrl) {
-          const qrCodeHeight = 50;
-          const qrCodeWidth = 50;
-          const qrCodeX = (pdf.internal.pageSize.width - qrCodeWidth) / 2;
-          const qrCodeY = pdf.internal.pageSize.height - qrCodeHeight - 20;
-  
-          pdf.setFontSize(12);
-          pdf.text("Scan QR Code for Bet Details", qrCodeX, qrCodeY - 10);
-          pdf.addImage(
-            qrCodeDataUrl,
-            "PNG",
-            qrCodeX,
-            qrCodeY,
-            qrCodeWidth,
-            qrCodeHeight
-          );
-        }
-  
-        pdf.save("betting_receipt.pdf");
-      })
-      .catch((error) => {
-        console.error("Error generating PDF:", error);
-      });
-  };
-
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
@@ -286,556 +114,656 @@ export default function BettingPage() {
     }
   };
 
+  const handleMenuOpen = (event, matchId) => {
+    setAnchorEl(event.currentTarget);
+    setActiveMatch(matchId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setActiveMatch(null);
+  };
+
   const selectedLeagueName = leagues.find((league) => league.endpoint === selectedLeague)?.name || "";
 
+  const formatMatchTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatMatchDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const generateRandomOdds = () => {
+    return (Math.random() * 5 + 1).toFixed(2);
+  };
+
+  const handleAddToBetSlip = (match, betType, odds) => {
+    const existingIndex = betSlip.findIndex(bet => bet.matchId === match.fixture.id);
+    
+    if (existingIndex >= 0) {
+      const updatedBetSlip = [...betSlip];
+      updatedBetSlip[existingIndex] = {
+        matchId: match.fixture.id,
+        homeTeam: match.teams.home.name,
+        awayTeam: match.teams.away.name,
+        betType,
+        odds: parseFloat(odds),
+        date: formatMatchDate(match.fixture.date),
+        time: formatMatchTime(match.fixture.date)
+      };
+      setBetSlip(updatedBetSlip);
+    } else {
+      setBetSlip([...betSlip, {
+        matchId: match.fixture.id,
+        homeTeam: match.teams.home.name,
+        awayTeam: match.teams.away.name,
+        betType,
+        odds: parseFloat(odds),
+        date: formatMatchDate(match.fixture.date),
+        time: formatMatchTime(match.fixture.date)
+      }]);
+    }
+  };
+
+  const handleRemoveFromBetSlip = (matchId) => {
+    setBetSlip(betSlip.filter(bet => bet.matchId !== matchId));
+  };
+
+  const calculatePotentialReturn = () => {
+    if (!betAmount || isNaN(betAmount) || betAmount <= 0 || betSlip.length === 0) return "0.00";
+    
+    const totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+    return (parseFloat(betAmount) * totalOdds).toFixed(2);
+  };
+
+  const handlePlaceBet = () => {
+    if (betSlip.length === 0 || !betAmount || isNaN(betAmount) || betAmount <= 0) {
+      alert("Please add bets to your slip and enter a valid bet amount");
+      return;
+    }
+    
+    const totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+    const potentialReturn = (parseFloat(betAmount) * totalOdds).toFixed(2);
+    
+    alert(`Bet placed successfully!\n\nStake: $${betAmount}\nPotential Return: $${potentialReturn}`);
+    
+    setBetSlip([]);
+    setBetAmount("");
+    setMobileBetSlipOpen(false);
+  };
+
+  const handlePredictClick = (match) => {
+    alert(`Predicting match: ${match.teams.home.name} vs ${match.teams.away.name}`);
+  };
+
+  const handleMoreClick = (match) => {
+    alert(`More details for: ${match.teams.home.name} vs ${match.teams.away.name}\n\nDate: ${formatMatchDate(match.fixture.date)}\nTime: ${formatMatchTime(match.fixture.date)}\nVenue: ${match.fixture.venue?.name || 'Unknown'}`);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col">
-      <div className="bg-teal-500 text-white p-4 rounded-lg shadow-lg mb-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-gray-900 text-white p-2 sm:p-4 flex flex-col">
+      {/* Header */}
+      <div className="bg-teal-500 text-white p-3 sm:p-4 rounded-lg shadow-lg mb-4 sm:mb-6 flex justify-between items-center">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img
             src="/images/BundlesBetsLogo.png"
             alt="Bundlesbets Logo"
-            className="w-10 h-10"
+            className="w-8 h-8 sm:w-10 sm:h-10"
           />
-          <span className="text-xl sm:text-2xl font-bold">Bundlesbets AI Agent</span>
+          <span className="text-lg sm:text-2xl font-bold">Sports Games</span>
         </div>
-        <a href="/otherPages/dashboard" className="text-sm sm:text-lg font-semibold hover:underline">
-          <FaHome className="text-2xl" />
+        <a href="/otherPages/dashboard" className="text-sm font-semibold hover:underline">
+          <FaHome className="text-xl sm:text-2xl" />
         </a>
       </div>
 
-      <Box sx={{ padding: 3, display: "flex", gap: 3, flexDirection: isSmallScreen ? "column" : "row" }}>
-        <Box sx={{ flex: 3 }}>
-          <FormControl fullWidth sx={{ marginBottom: 3 }}>
-            <InputLabel id="league-select-label" className="text-white">
-              Select League
-            </InputLabel>
-            <Select
-              labelId="league-select-label"
-              value={selectedLeague}
-              label="Select League"
-              onChange={(e) => setSelectedLeague(e.target.value)}
-              sx={{
-                backgroundColor: "white",
-                color: "black",
-                "& .MuiSelect-icon": { color: "black" },
-              }}
-              renderValue={(selected) => {
-                const selectedLeagueData = leagues.find((league) => league.endpoint === selected);
-                return (
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <Avatar
-                      src={selectedLeagueData?.logo}
-                      alt={selectedLeagueData?.name}
-                      sx={{ width: 24, height: 24 }}
-                    />
-                    <span style={{ color: "black" }}>{selectedLeagueData?.name}</span>
-                  </div>
-                );
-              }}
-            >
-              {leagues.map((league) => (
-                <MenuItem key={league.endpoint} value={league.endpoint} sx={{ color: "black" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <Avatar src={league.logo} alt={league.name} sx={{ width: 24, height: 24 }} />
-                    {league.name}
-                  </div>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <Typography variant="body1" className="text-white mb-4">
-            {selectedLeagueName} has been selected.
-          </Typography>
-
-          {matches.length > 0 ? (
-            <TableContainer component={Paper} className="bg-[#1E3A8A] max-h-[600px] overflow-y-auto">
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow className="bg-[#1E3A8A]">
-                    <TableCell className="text-white">Fixture</TableCell>
-                    <TableCell className="text-white">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {currentMatches.map((match) => (
-                    <TableRow key={match.fixture.id} className="hover:bg-[#1E3A8A]/90 transition-colors">
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <Typography variant="body2" className="text-gray-500 mb-2">
-                            {new Date(match.fixture.date).toLocaleDateString()} -{" "}
-                            {new Date(match.fixture.date).toLocaleTimeString()}
-                          </Typography>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <Avatar
-                                src={match.teams.home.logo}
-                                alt={match.teams.home.name}
-                                sx={{ width: isSmallScreen ? 16 : 24, height: isSmallScreen ? 16 : 24 }}
-                              />
-                              <Typography className="text-black" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
-                                {match.teams.home.name}
-                              </Typography>
-                            </div>
-                            <Typography className="text-black">vs</Typography>
-                            <div className="flex items-center gap-2">
-                              <Avatar
-                                src={match.teams.away.logo}
-                                alt={match.teams.away.name}
-                                sx={{ width: isSmallScreen ? 16 : 24, height: isSmallScreen ? 16 : 24 }}
-                              />
-                              <Typography className="text-black" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
-                                {match.teams.away.name}
-                              </Typography>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 flex-wrap">
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => handlePlaceBet(match, "home")}
-                            className="flex-1"
-                            size={isSmallScreen ? "small" : "medium"}
-                            startIcon={
-                              <Avatar
-                                src={match.teams.home.logo}
-                                alt={match.teams.home.name}
-                                sx={{ width: isSmallScreen ? 12 : 16, height: isSmallScreen ? 12 : 16 }}
-                              />
-                            }
-                          >
-                            Win ({generateRandomOdds()})
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => handlePlaceBet(match, "draw")}
-                            className="flex-1"
-                            size={isSmallScreen ? "small" : "medium"}
-                          >
-                            Draw ({generateRandomOdds()})
-                          </Button>
-                          <Button
-                            variant="contained"
-                            color="error"
-                            onClick={() => handlePlaceBet(match, "away")}
-                            className="flex-1"
-                            size={isSmallScreen ? "small" : "medium"}
-                            startIcon={
-                              <Avatar
-                                src={match.teams.away.logo}
-                                alt={match.teams.away.name}
-                                sx={{ width: isSmallScreen ? 12 : 16, height: isSmallScreen ? 12 : 16 }}
-                              />
-                            }
-                          >
-                            Win ({generateRandomOdds()})
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            color="info"
-                            onClick={() => alert("More Bets clicked!")}
-                            className="flex-1"
-                            size={isSmallScreen ? "small" : "medium"}
-                          >
-                            More Bets
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            color="warning"
-                            onClick={() => alert("Predicted Score clicked!")}
-                            className="flex-1"
-                            size={isSmallScreen ? "small" : "medium"}
-                          >
-                            Predicted Score
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
-            <Typography className="text-center text-gray-400">
-              No matches available for this league.
-            </Typography>
-          )}
-
-          <div className="flex justify-center gap-4 mt-4">
-            <Button
-              onClick={handlePreviousPage}
-              disabled={currentPage === 1}
-              className="px-4 py-2 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#1E3A8A]/90 disabled:bg-gray-500"
-            >
-              Previous
-            </Button>
-            <span className="text-lg text-gray-400">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#1E3A8A]/90 disabled:bg-gray-500"
-            >
-              Next
-            </Button>
+      {/* Main Content */}
+      <div className="flex flex-1 gap-4 overflow-hidden">
+        {/* Matches Column */}
+        <div className="w-full flex flex-col">
+          {/* League Selector */}
+          <div className="mb-4 sm:mb-6">
+            <FormControl fullWidth>
+              <InputLabel id="league-select-label" className="text-gray-300 text-sm sm:text-base">
+                Select League
+              </InputLabel>
+              <Select
+                labelId="league-select-label"
+                value={selectedLeague}
+                label="Select League"
+                onChange={(e) => setSelectedLeague(e.target.value)}
+                className="bg-teal-100 text-white rounded-lg"
+                sx={{
+                  "& .MuiSelect-icon": { color: "white" },
+                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "gray.600" },
+                }}
+                renderValue={(selected) => {
+                  const selectedLeagueData = leagues.find((league) => league.endpoint === selected);
+                  return (
+                    <div className="flex items-center gap-2">
+                      {selectedLeagueData?.logo && (
+                        <img 
+                          src={selectedLeagueData.logo} 
+                          alt={selectedLeagueData.name} 
+                          className="w-5 h-5 sm:w-6 sm:h-6"
+                        />
+                      )}
+                      <span className="text-sm sm:text-base">{selectedLeagueData?.name}</span>
+                    </div>
+                  );
+                }}
+              >
+                {leagues.map((league) => (
+                  <MenuItem 
+                    key={league.endpoint} 
+                    value={league.endpoint}
+                    className="bg-gray-800 hover:bg-gray-700 text-white"
+                  >
+                    <div className="flex items-center gap-2">
+                      {league.logo && (
+                        <img src={league.logo} alt={league.name} className="w-5 h-5 sm:w-6 sm:h-6" />
+                      )}
+                      <span className="text-sm sm:text-base">{league.name}</span>
+                    </div>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </div>
-        </Box>
 
-        {/* Bet Slip Section */}
-        {!isSmallScreen ? (
-          <Box sx={{ 
-            flex: 1, 
-            backgroundColor: "gray.800", 
-            padding: 2, 
-            borderRadius: 2, 
-            border: "1px solid #1E3A8A",
-            display: "flex",
-            flexDirection: "column",
-            maxHeight: "calc(100vh - 200px)",
-            overflow: "hidden"
-          }}>
-            <Typography variant="h6" className="text-white mb-4">
-              Bet Slip
-            </Typography>
-            <Box sx={{ 
-              flex: 1, 
-              overflowY: "auto",
-              mb: 2,
-              "&::-webkit-scrollbar": {
-                width: "6px",
-              },
-              "&::-webkit-scrollbar-track": {
-                background: "#2D3748",
-              },
-              "&::-webkit-scrollbar-thumb": {
-                background: "#4A5568",
-                borderRadius: "3px",
-              },
-              "&::-webkit-scrollbar-thumb:hover": {
-                background: "#718096",
-              }
-            }}>
-              {betSlip.length > 0 ? (
-                <div>
-                  {betSlip.map((bet) => (
-                    <Card key={bet.matchId} className="mb-4 bg-gray-700 border border-[#1E3A8A]">
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <Typography className="text-black" sx={{ fontSize: isSmallScreen ? "0.875rem" : "1rem" }}>
-                              {bet.teams.home} vs {bet.teams.away}
-                            </Typography>
-                            <Typography className="text-black text-sm">
-                              Bet: {bet.betType === "home" ? "Home Win" : bet.betType === "draw" ? "Draw" : "Away Win"} | Odds: {bet.odds}
-                            </Typography>
+          {/* Matches List */}
+          <div className="flex-1 flex flex-col">
+            <h2 className="text-lg sm:text-xl font-bold text-teal-400 mb-2">
+              {selectedLeagueName} Matches
+            </h2>
+            
+            {/* Scrollable matches container */}
+            <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+              {matches.length > 0 ? (
+                <div className="grid gap-3 sm:gap-4">
+                  {currentMatches.map((match) => {
+                    const homeOdds = generateRandomOdds();
+                    const drawOdds = generateRandomOdds();
+                    const awayOdds = generateRandomOdds();
+
+                    return (
+                      <div 
+                        key={match.fixture.id} 
+                        className="bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-lg border-l-4 border-teal-500 hover:bg-gray-700 transition-colors"
+                      >
+                        {/* Date and Time */}
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs sm:text-sm font-medium text-teal-400">
+                              {formatMatchDate(match.fixture.date)}
+                            </span>
+                            <span className="text-xs sm:text-sm text-gray-400">
+                              {formatMatchTime(match.fixture.date)}
+                            </span>
                           </div>
-                          <Button
-                            variant="contained"
-                            color="error"
-                            onClick={() => handleRemoveBet(bet.matchId)}
-                            className="ml-2"
-                            size={isSmallScreen ? "small" : "medium"}
-                          >
-                            Remove
-                          </Button>
+                          
+                          {isSmallScreen && (
+                            <button 
+                              onClick={(e) => handleMenuOpen(e, match.fixture.id)}
+                              className="text-gray-400 hover:text-white"
+                            >
+                              <FaEllipsisV />
+                            </button>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        
+                        {/* Teams and bet buttons */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                          {/* Teams */}
+                          <div className="flex-1 flex items-center gap-1 min-w-0">
+                            <div className="flex items-center gap-1">
+                              <Avatar 
+                                src={match.teams.home.logo} 
+                                alt={match.teams.home.name}
+                                className="w-5 h-5 sm:w-6 sm:h-6"
+                              />
+                              <span className="text-xs sm:text-sm font-medium truncate max-w-[70px] sm:max-w-[100px]">
+                                {match.teams.home.name}
+                              </span>
+                            </div>
+                            
+                            <span className="mx-1 text-xs sm:text-sm font-bold">vs</span>
+                            
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs sm:text-sm font-medium truncate max-w-[70px] sm:max-w-[100px]">
+                                {match.teams.away.name}
+                              </span>
+                              <Avatar 
+                                src={match.teams.away.logo} 
+                                alt={match.teams.away.name}
+                                className="w-5 h-5 sm:w-6 sm:h-6"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Bet buttons */}
+                          {!isSmallScreen && (
+                            <div className="flex gap-1">
+                              <Button 
+                                variant="contained" 
+                                size="small"
+                                color="primary"
+                                className="text-xs px-2 py-1 min-w-0"
+                                onClick={() => handleAddToBetSlip(match, 'home', homeOdds)}
+                                startIcon={<Avatar src={match.teams.home.logo} className="w-3 h-3" />}
+                              >
+                                {homeOdds}
+                              </Button>
+                              <Button 
+                                variant="contained" 
+                                size="small"
+                                color="secondary"
+                                className="text-xs px-2 py-1 min-w-0"
+                                onClick={() => handleAddToBetSlip(match, 'draw', drawOdds)}
+                              >
+                                {drawOdds}
+                              </Button>
+                              <Button 
+                                variant="contained" 
+                                size="small"
+                                color="error"
+                                className="text-xs px-2 py-1 min-w-0"
+                                onClick={() => handleAddToBetSlip(match, 'away', awayOdds)}
+                                startIcon={<Avatar src={match.teams.away.logo} className="w-3 h-3" />}
+                              >
+                                {awayOdds}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Score and action buttons */}
+                        <div className="flex justify-between items-center">
+                          {/* Score */}
+                          {match.goals.home !== null && match.goals.away !== null && (
+                            <div className="inline-flex items-center bg-gray-700 px-2 py-0.5 rounded-full">
+                              <span className="text-xs sm:text-sm font-bold">
+                                {match.goals.home} - {match.goals.away}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Predict and More buttons */}
+                          {!isSmallScreen && (
+                            <div className="flex gap-1 ml-auto">
+                              <Button 
+                                variant="outlined" 
+                                size="small"
+                                color="info"
+                                className="text-xs px-2 py-1 min-w-0"
+                                onClick={() => handlePredictClick(match)}
+                              >
+                                Predict
+                              </Button>
+                              <Button 
+                                variant="outlined" 
+                                size="small"
+                                color="inherit"
+                                className="text-xs px-2 py-1 min-w-0"
+                                onClick={() => handleMoreClick(match)}
+                              >
+                                More
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <Typography className="text-gray-400 text-center py-4">
-                  No bets added yet.
-                </Typography>
+                <div className="text-center py-6 sm:py-8 bg-gray-800 rounded-lg">
+                  <Typography variant="h6" className="text-gray-400 text-sm sm:text-base">
+                    No matches available for this league
+                  </Typography>
+                </div>
               )}
-            </Box>
-            <Box sx={{ mt: "auto" }}>
+            </div>
+          </div>
+
+          {/* Pagination */}
+          {matches.length > matchesPerPage && (
+            <div className="flex justify-center items-center gap-3 sm:gap-4 mt-4 sm:mt-6 mb-16 sm:mb-0">
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 1}
+                className={`flex items-center gap-1 px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm ${
+                  currentPage === 1 ? 'bg-gray-700 text-gray-500' : 'bg-teal-600 hover:bg-teal-700 text-white'
+                }`}
+              >
+                <FaChevronLeft className="text-sm sm:text-base" />
+                Previous
+              </button>
+              
+              <span className="text-xs sm:text-sm text-gray-300">
+                Page {currentPage} of {totalPages}
+              </span>
+              
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className={`flex items-center gap-1 px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm ${
+                  currentPage === totalPages ? 'bg-gray-700 text-gray-500' : 'bg-teal-600 hover:bg-teal-700 text-white'
+                }`}
+              >
+                Next
+                <FaChevronRight className="text-sm sm:text-base" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Bet Slip Column - Only show on larger screens */}
+        {!isMediumScreen && (
+          <div className="hidden md:block md:w-1/3 bg-gray-800 rounded-lg p-4 flex flex-col">
+            <h2 className="text-lg font-bold text-teal-400 mb-4">Bet Slip</h2>
+            
+            {/* Scrollable bet slip container */}
+            <div className="flex-1 overflow-y-auto mb-4 space-y-3 pr-2">
+              {betSlip.length > 0 ? (
+                betSlip.map((bet) => (
+                  <div key={bet.matchId} className="bg-gray-700 p-3 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {bet.homeTeam} vs {bet.awayTeam}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {bet.date} {bet.time}
+                        </p>
+                        <p className="text-xs mt-1">
+                          Bet: {bet.betType === 'home' ? 'Home Win' : 
+                               bet.betType === 'away' ? 'Away Win' : 'Draw'} @ {bet.odds}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => handleRemoveFromBetSlip(bet.matchId)}
+                        className="text-gray-400 hover:text-white text-lg"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex-1 flex items-center justify-center h-full">
+                  <p className="text-gray-400 text-center">Add selections to your bet slip</p>
+                </div>
+              )}
+            </div>
+
+            {/* Bet amount and place bet button */}
+            <div className="mt-auto">
               <TextField
                 label="Bet Amount"
                 type="number"
                 value={betAmount}
                 onChange={(e) => setBetAmount(e.target.value)}
-                className="w-full mb-4"
+                fullWidth
+                size="small"
+                className="mb-3"
+                inputProps={{
+                  min: "1",
+                  step: "1"
+                }}
+                InputLabelProps={{
+                  className: "text-gray-300"
+                }}
                 sx={{
-                  backgroundColor: "white",
-                  "& .MuiInputBase-input": {
-                    color: "black",
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "black",
-                  },
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
-                      borderColor: "gray",
+                      borderColor: "gray.600",
                     },
                     "&:hover fieldset": {
-                      borderColor: "black",
+                      borderColor: "gray.500",
                     },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "teal.500",
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    color: "white",
                   },
                 }}
               />
-              <Typography className="text-white mb-4">
-                Potential Return: {calculatePotentialReturn()}
-              </Typography>
-              <div className="flex gap-2">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handlePlaceAllBets}
-                  className="flex-1"
-                >
-                  Place Bet
-                </Button>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={handleCancelAllBets}
-                  className="flex-1"
-                >
-                  Reset
-                </Button>
-              </div>
-            </Box>
-          </Box>
-        ) : (
-          <>
-            {/* Fixed Button for Small Screens */}
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setShowBetSlip(!showBetSlip)}
-              sx={{
-                position: "fixed",
-                bottom: 16,
-                right: 16,
-                zIndex: 1000,
-                borderRadius: "50%",
-                width: 56,
-                height: 56,
-                boxShadow: 3,
-              }}
-            >
-              {showBetSlip ? "Close" : "Bet Slip"}
-            </Button>
 
-            {/* Bet Slip Drawer for Small Screens */}
-            {showBetSlip && (
-              <Box
-                sx={{
-                  position: "fixed",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 999,
-                  backgroundColor: "gray.800",
-                  padding: 2,
-                  borderRadius: "8px 8px 0 0",
-                  boxShadow: 3,
-                  maxHeight: "60vh",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm text-gray-300">Potential Return:</span>
+                <span className="font-bold text-teal-400">${calculatePotentialReturn()}</span>
+              </div>
+
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                disabled={betSlip.length === 0 || !betAmount}
+                onClick={handlePlaceBet}
+                className="bg-teal-600 hover:bg-teal-700"
               >
-                <Typography variant="h6" className="text-white mb-4">
-                  Bet Slip
-                </Typography>
-                <Box sx={{ 
-                  flex: 1,
-                  overflowY: "auto",
-                  mb: 2,
-                  "&::-webkit-scrollbar": {
-                    width: "6px",
-                  },
-                  "&::-webkit-scrollbar-track": {
-                    background: "#2D3748",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    background: "#4A5568",
-                    borderRadius: "3px",
-                  },
-                  "&::-webkit-scrollbar-thumb:hover": {
-                    background: "#718096",
-                  }
-                }}>
-                  {betSlip.length > 0 ? (
-                    <div>
-                      {betSlip.map((bet) => (
-                        <Card key={bet.matchId} className="mb-4 bg-gray-700 border border-[#1E3A8A]">
-                          <CardContent className="p-3">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <Typography className="text-black" sx={{ fontSize: "0.875rem" }}>
-                                  {bet.teams.home} vs {bet.teams.away}
-                                </Typography>
-                                <Typography className="text-black text-sm">
-                                  Bet: {bet.betType === "home" ? "Home Win" : bet.betType === "draw" ? "Draw" : "Away Win"} | Odds: {bet.odds}
-                                </Typography>
-                              </div>
-                              <Button
-                                variant="contained"
-                                color="error"
-                                onClick={() => handleRemoveBet(bet.matchId)}
-                                className="ml-2"
-                                size="small"
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <Typography className="text-gray-400 text-center py-4">
-                      No bets added yet.
-                    </Typography>
-                  )}
-                </Box>
-                <Box>
-                  <TextField
-                    label="Bet Amount"
-                    type="number"
-                    value={betAmount}
-                    onChange={(e) => setBetAmount(e.target.value)}
-                    className="w-full mb-4"
-                    sx={{
-                      backgroundColor: "white",
-                      "& .MuiInputBase-input": {
-                        color: "black",
-                      },
-                      "& .MuiInputLabel-root": {
-                        color: "black",
-                      },
-                      "& .MuiOutlinedInput-root": {
-                        "& fieldset": {
-                          borderColor: "gray",
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "black",
-                        },
-                      },
-                    }}
-                  />
-                  <Typography className="text-white mb-4">
-                    Potential Return: {calculatePotentialReturn()}
-                  </Typography>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handlePlaceAllBets}
-                      className="flex-1"
-                    >
-                      Place Bet
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={handleCancelAllBets}
-                      className="flex-1"
-                    >
-                      Reset
-                    </Button>
-                  </div>
-                </Box>
-              </Box>
-            )}
-          </>
-        )}
-      </Box>
-
-      {/* Conditionally Render Receipt */}
-      {showReceipt && (
-        <div ref={receiptRef} className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="w-full h-full p-8 bg-white text-black rounded-lg shadow-lg flex flex-col justify-between">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold" style={{ color: "#13dfae" }}>
-                Bundlesbets
-              </h2>
-              <p className="text-lg text-gray-600 mt-2">Betting Receipt</p>
-            </div>
-
-            <div className="mb-8">
-              <div className="flex justify-between mb-3">
-                <span className="text-gray-600">Date:</span>
-                <span className="font-semibold">{currentDate}</span>
-              </div>
-              <div className="flex justify-between mb-3">
-                <span className="text-gray-600">Time:</span>
-                <span className="font-semibold">{currentTime}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Transaction ID:</span>
-                <span className="font-semibold">{generateTransactionId()}</span>
-              </div>
-            </div>
-
-            <div className="mb-8 flex-1 overflow-y-auto">
-              <h3 className="text-2xl font-semibold mb-4" style={{ color: "#13dfae" }}>
-                Bet Details
-              </h3>
-              {betSlip.map((bet) => (
-                <div key={bet.matchId} className="mb-4 pb-4 border-b border-gray-200">
-                  <p className="text-xl font-semibold">
-                    {bet.teams.home} vs {bet.teams.away}
-                  </p>
-                  <p className="text-lg text-gray-600 mt-1">
-                    Bet:{" "}
-                    {bet.betType === "home"
-                      ? "Home Win"
-                      : bet.betType === "draw"
-                      ? "Draw"
-                      : "Away Win"}{" "}
-                    | Odds: {bet.odds}
-                  </p>
-                  <p className="text-lg text-gray-600 mt-1">
-                    Date: {bet.date} | Time: {bet.time}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mb-8">
-              <div className="flex justify-between mb-3">
-                <span className="text-gray-600">Bet Amount:</span>
-                <span className="font-semibold">${betAmount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Potential Return:</span>
-                <span className="font-semibold">${calculatePotentialReturn()}</span>
-              </div>
-            </div>
-
-            {qrCodeDataUrl && (
-              <div className="text-center mt-8">
-                <p className="text-lg text-gray-600 mb-3">
-                  Scan the QR code to view your bet details
-                </p>
-                <img
-                  src={qrCodeDataUrl}
-                  alt="QR Code"
-                  className="w-48 h-48 mx-auto"
-                />
-              </div>
-            )}
-
-            <div className="text-center mt-8">
-              <p className="text-lg text-gray-600">
-                Thank you for using Bundlesbets!
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                For support, contact us at support@bundlesbets.com
-              </p>
+                Place Bet
+              </Button>
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Mobile Bet Slip Button - Fixed at bottom */}
+      {isMediumScreen && betSlip.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-3 border-t border-gray-700 z-10">
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={() => setMobileBetSlipOpen(true)}
+            className="bg-teal-600 hover:bg-teal-700"
+          >
+            View Bet Slip ({betSlip.length})
+          </Button>
         </div>
       )}
+
+      {/* Mobile Bet Slip Dialog */}
+      <Dialog
+        open={mobileBetSlipOpen}
+        onClose={() => setMobileBetSlipOpen(false)}
+        fullScreen={isSmallScreen}
+        PaperProps={{
+          style: {
+            backgroundColor: '#1F2937',
+            color: 'white',
+          },
+        }}
+      >
+        <DialogTitle className="text-teal-400">Your Bet Slip</DialogTitle>
+        <DialogContent>
+          <div className="space-y-3">
+            {betSlip.length > 0 ? (
+              betSlip.map((bet) => (
+                <div key={bet.matchId} className="bg-gray-700 p-3 rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {bet.homeTeam} vs {bet.awayTeam}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {bet.date} {bet.time}
+                      </p>
+                      <p className="text-xs mt-1">
+                        Bet: {bet.betType === 'home' ? 'Home Win' : 
+                             bet.betType === 'away' ? 'Away Win' : 'Draw'} @ {bet.odds}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => handleRemoveFromBetSlip(bet.matchId)}
+                      className="text-gray-400 hover:text-white text-lg"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-400 text-center py-4">No bets in your slip</p>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <TextField
+              label="Bet Amount"
+              type="number"
+              value={betAmount}
+              onChange={(e) => setBetAmount(e.target.value)}
+              fullWidth
+              size="small"
+              className="mb-3"
+              inputProps={{
+                min: "1",
+                step: "1"
+              }}
+              InputLabelProps={{
+                className: "text-gray-300"
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "gray.600",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "gray.500",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "teal.500",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  color: "white",
+                },
+              }}
+            />
+
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-gray-300">Potential Return:</span>
+              <span className="font-bold text-teal-400">${calculatePotentialReturn()}</span>
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMobileBetSlipOpen(false)} color="inherit">
+            Close
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handlePlaceBet}
+            className="bg-teal-600 hover:bg-teal-700"
+          >
+            Place Bet
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Menu for small screens */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          style: {
+            backgroundColor: '#1F2937',
+            color: 'white',
+          },
+        }}
+      >
+        {activeMatch && matches.find(m => m.fixture.id === activeMatch) && (
+          [
+            <MuiMenuItem key="home" onClick={(e) => {
+              const match = matches.find(m => m.fixture.id === activeMatch);
+              handleAddToBetSlip(match, 'home', generateRandomOdds());
+              handleMenuClose();
+            }}>
+              <Button 
+                fullWidth
+                variant="contained" 
+                color="primary"
+                size="small"
+                className="text-xs"
+                startIcon={<Avatar src={matches.find(m => m.fixture.id === activeMatch)?.teams.home.logo} className="w-3 h-3" />}
+              >
+                Win Home
+              </Button>
+            </MuiMenuItem>,
+            <MuiMenuItem key="draw" onClick={(e) => {
+              const match = matches.find(m => m.fixture.id === activeMatch);
+              handleAddToBetSlip(match, 'draw', generateRandomOdds());
+              handleMenuClose();
+            }}>
+              <Button 
+                fullWidth
+                variant="contained" 
+                color="secondary"
+                size="small"
+                className="text-xs"
+              >
+                Draw
+              </Button>
+            </MuiMenuItem>,
+            <MuiMenuItem key="away" onClick={(e) => {
+              const match = matches.find(m => m.fixture.id === activeMatch);
+              handleAddToBetSlip(match, 'away', generateRandomOdds());
+              handleMenuClose();
+            }}>
+              <Button 
+                fullWidth
+                variant="contained" 
+                color="error"
+                size="small"
+                className="text-xs"
+                startIcon={<Avatar src={matches.find(m => m.fixture.id === activeMatch)?.teams.away.logo} className="w-3 h-3" />}
+              >
+                Win Away
+              </Button>
+            </MuiMenuItem>,
+            <MuiMenuItem key="predict" onClick={(e) => {
+              const match = matches.find(m => m.fixture.id === activeMatch);
+              handlePredictClick(match);
+              handleMenuClose();
+            }}>
+              <Button 
+                fullWidth
+                variant="outlined" 
+                color="info"
+                size="small"
+                className="text-xs"
+              >
+                Predict
+              </Button>
+            </MuiMenuItem>,
+            <MuiMenuItem key="more" onClick={(e) => {
+              const match = matches.find(m => m.fixture.id === activeMatch);
+              handleMoreClick(match);
+              handleMenuClose();
+            }}>
+              <Button 
+                fullWidth
+                variant="outlined" 
+                color="inherit"
+                size="small"
+                className="text-xs"
+              >
+                More
+              </Button>
+            </MuiMenuItem>
+          ]
+        )}
+      </Menu>
     </div>
   );
 }
