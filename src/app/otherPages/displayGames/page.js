@@ -1,3 +1,320 @@
+
+
+
+// // pages/matches.js
+// "use client";
+// import { useState, useEffect } from "react";
+// import { sportsData } from "@/app/components/displayGames/sportsData";
+// import Header from "@/app/components/displayGames/headerDisplayG";
+// import SportLeagueSelectors from "@/app/components/displayGames/sportsAndLeagueSelector";
+// import MatchCard from "@/app/components/displayGames/matchCard";
+// import BetSlip from "@/app/components/displayGames/betSlip";
+// import Pagination from "@/app/components/displayGames/pagination";
+// import MobileMenu from "@/app/components/displayGames/mobileMenu";
+// import { 
+//        Select, 
+//        MenuItem, 
+//        FormControl, 
+//        InputLabel, 
+//        Typography,
+//        Avatar,
+//        Button,
+//        Menu,
+//        MenuItem as MuiMenuItem,
+//        useMediaQuery,
+//        TextField,
+//        Dialog,
+//        DialogTitle,
+//        DialogContent,
+//        DialogActions
+//     } from "@mui/material";
+
+// export default function MatchesPage() {
+//   const [selectedSport, setSelectedSport] = useState(null);
+//   const [leagues, setLeagues] = useState([]);
+//   const [selectedLeague, setSelectedLeague] = useState(null);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [matches, setMatches] = useState([]);
+//   const [anchorEl, setAnchorEl] = useState(null);
+//   const [activeMatch, setActiveMatch] = useState(null);
+//   const [betSlip, setBetSlip] = useState([]);
+//   const [betAmount, setBetAmount] = useState("");
+//   const [mobileBetSlipOpen, setMobileBetSlipOpen] = useState(false);
+//   const matchesPerPage = 10;
+//   const isSmallScreen = useMediaQuery("(max-width:600px)");
+//   const isMediumScreen = useMediaQuery("(max-width:900px)");
+
+//   useEffect(() => {
+//     if (selectedSport) {
+//       const fetchLeagueLogos = async () => {
+//         const updatedLeagues = await Promise.all(
+//           selectedSport.leagues.map(async (league) => {
+//             try {
+//               const response = await fetch(league.endpoint, {
+//                 method: "GET",
+//                 headers: {
+//                   "x-apisports-key": process.env.NEXT_PUBLIC_SPORTS_API_KEY,
+//                 },
+//               });
+//               if (!response.ok) throw new Error("Failed to fetch league data");
+//               const data = await response.json();
+//               const logo = data.response[0]?.league?.logo || "";
+//               return { ...league, logo };
+//             } catch (error) {
+//               console.error(`Error fetching logo for ${league.name}:`, error);
+//               return { ...league, logo: "" };
+//             }
+//           })
+//         );
+//         setLeagues(updatedLeagues);
+//       };
+
+//       fetchLeagueLogos();
+//     }
+//   }, [selectedSport]);
+
+//   useEffect(() => {
+//     if (selectedLeague) {
+//       const fetchMatches = async () => {
+//         try {
+//           const leagueId = selectedLeague.split("id=")[1];
+//           const response = await fetch(
+//             `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=2024&from=2025-03-20&to=2025-10-08`,
+//             {
+//               method: "GET",
+//               headers: {
+//                 "x-apisports-key": "aa2a46cd86fefe10bf10a5358b1769a3",
+//               },
+//             }
+//           );
+//           if (!response.ok) throw new Error("Failed to fetch matches");
+//           const data = await response.json();
+//           setMatches(data.response || []);
+//           setCurrentPage(1);
+//         } catch (error) {
+//           console.error("Error fetching matches:", error);
+//           setMatches([]);
+//         }
+//       };
+
+//       fetchMatches();
+//     }
+//   }, [selectedLeague]);
+
+//   const totalPages = Math.ceil(matches.length / matchesPerPage);
+//   const indexOfLastMatch = currentPage * matchesPerPage;
+//   const indexOfFirstMatch = indexOfLastMatch - matchesPerPage;
+//   const currentMatches = matches.slice(indexOfFirstMatch, indexOfLastMatch);
+
+//   const handleNextPage = () => {
+//     if (currentPage < totalPages) {
+//       setCurrentPage(currentPage + 1);
+//     }
+//   };
+
+//   const handlePreviousPage = () => {
+//     if (currentPage > 1) {
+//       setCurrentPage(currentPage - 1);
+//     }
+//   };
+
+//   const handleMenuOpen = (event, matchId) => {
+//     setAnchorEl(event.currentTarget);
+//     setActiveMatch(matchId);
+//   };
+
+//   const handleMenuClose = () => {
+//     setAnchorEl(null);
+//     setActiveMatch(null);
+//   };
+
+//   const handleSportSelect = (sport) => {
+//     setSelectedSport(sport);
+//     setSelectedLeague(null);
+//     setMatches([]);
+//   };
+
+//   const handleLeagueSelect = (leagueEndpoint) => {
+//     setSelectedLeague(leagueEndpoint);
+//   };
+
+//   const generateRandomOdds = () => {
+//     return (Math.random() * 5 + 1).toFixed(2);
+//   };
+
+//   const handleAddToBetSlip = (match, betType, odds) => {
+//     const existingIndex = betSlip.findIndex(bet => bet.matchId === match.fixture.id);
+    
+//     if (existingIndex >= 0) {
+//       const updatedBetSlip = [...betSlip];
+//       updatedBetSlip[existingIndex] = {
+//         matchId: match.fixture.id,
+//         homeTeam: match.teams.home.name,
+//         awayTeam: match.teams.away.name,
+//         betType,
+//         odds: parseFloat(odds),
+//         date: formatMatchDate(match.fixture.date),
+//         time: formatMatchTime(match.fixture.date)
+//       };
+//       setBetSlip(updatedBetSlip);
+//     } else {
+//       setBetSlip([...betSlip, {
+//         matchId: match.fixture.id,
+//         homeTeam: match.teams.home.name,
+//         awayTeam: match.teams.away.name,
+//         betType,
+//         odds: parseFloat(odds),
+//         date: formatMatchDate(match.fixture.date),
+//         time: formatMatchTime(match.fixture.date)
+//       }]);
+//     }
+//   };
+
+//   const handleRemoveFromBetSlip = (matchId) => {
+//     setBetSlip(betSlip.filter(bet => bet.matchId !== matchId));
+//   };
+
+//   const calculatePotentialReturn = () => {
+//     if (!betAmount || isNaN(betAmount) || betAmount <= 0 || betSlip.length === 0) return "0.00";
+    
+//     const totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+//     return (parseFloat(betAmount) * totalOdds).toFixed(2);
+//   };
+
+//   const handlePlaceBet = () => {
+//     if (betSlip.length === 0 || !betAmount || isNaN(betAmount) || betAmount <= 0) {
+//       alert("Please add bets to your slip and enter a valid bet amount");
+//       return;
+//     }
+    
+//     const totalOdds = betSlip.reduce((acc, bet) => acc * bet.odds, 1);
+//     const potentialReturn = (parseFloat(betAmount) * totalOdds).toFixed(2);
+    
+//     alert(`Bet placed successfully!\n\nStake: $${betAmount}\nPotential Return: $${potentialReturn}`);
+    
+//     setBetSlip([]);
+//     setBetAmount("");
+//     setMobileBetSlipOpen(false);
+//   };
+
+//   const handlePredictClick = (match) => {
+//     alert(`Predicting match: ${match.teams.home.name} vs ${match.teams.away.name}`);
+//   };
+
+//   const handleMoreClick = (match) => {
+//     alert(`More details for: ${match.teams.home.name} vs ${match.teams.away.name}\n\nDate: ${formatMatchDate(match.fixture.date)}\nTime: ${formatMatchTime(match.fixture.date)}\nVenue: ${match.fixture.venue?.name || 'Unknown'}`);
+//   };
+
+//   const formatMatchTime = (dateString) => {
+//     const date = new Date(dateString);
+//     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+//   };
+
+//   const formatMatchDate = (dateString) => {
+//     const date = new Date(dateString);
+//     return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gray-900 text-white p-2 sm:p-4 flex flex-col">
+//       <Header />
+      
+//       {/* Main Content */}
+//       <div className="flex flex-1 gap-4 overflow-hidden">
+//         {/* Matches Column */}
+//         <div className="w-full flex flex-col">
+//           <SportLeagueSelectors 
+//             sportsData={sportsData}
+//             selectedSport={selectedSport}
+//             handleSportSelect={handleSportSelect}
+//             leagues={leagues}
+//             selectedLeague={selectedLeague}
+//             handleLeagueSelect={handleLeagueSelect}
+//           />
+
+//           {/* Matches List */}
+//           {selectedLeague ? (
+//             <div className="flex-1 flex flex-col">
+//               <h2 className="text-lg sm:text-xl font-bold text-teal-400 mb-2">
+//                 {leagues.find((league) => league.endpoint === selectedLeague)?.name} Matches
+//               </h2>
+              
+//               {/* Scrollable matches container */}
+//               <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+//                 {matches.length > 0 ? (
+//                   <div className="grid gap-3 sm:gap-4">
+//                     {currentMatches.map((match) => (
+//                       <MatchCard 
+//                         key={match.fixture.id}
+//                         match={match}
+//                         isSmallScreen={isSmallScreen}
+//                         handleMenuOpen={handleMenuOpen}
+//                         handleAddToBetSlip={handleAddToBetSlip}
+//                         handlePredictClick={handlePredictClick}
+//                         handleMoreClick={handleMoreClick}
+//                       />
+//                     ))}
+//                   </div>
+//                 ) : (
+//                   <div className="text-center py-6 sm:py-8 bg-gray-800 rounded-lg">
+//                     <Typography variant="h6" className="text-gray-400 text-sm sm:text-base">
+//                       No matches available for this league
+//                     </Typography>
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="flex-1 flex items-center justify-center bg-gray-800 rounded-lg">
+//               {selectedSport ? (
+//                 <Typography variant="h6" className="text-gray-400 text-center">
+//                   Please select a league to view matches
+//                 </Typography>
+//               ) : (
+//                 <Typography variant="h6" className="text-gray-400 text-center">
+//                   Please select a sport to begin
+//                 </Typography>
+//               )}
+//             </div>
+//           )}
+
+//           <Pagination 
+//             currentPage={currentPage}
+//             totalPages={totalPages}
+//             handlePreviousPage={handlePreviousPage}
+//             handleNextPage={handleNextPage}
+//             matches={matches}
+//             matchesPerPage={matchesPerPage}
+//           />
+//         </div>
+
+//         <BetSlip 
+//           betSlip={betSlip}
+//           handleRemoveFromBetSlip={handleRemoveFromBetSlip}
+//           betAmount={betAmount}
+//           setBetAmount={setBetAmount}
+//           calculatePotentialReturn={calculatePotentialReturn}
+//           handlePlaceBet={handlePlaceBet}
+//           mobileBetSlipOpen={mobileBetSlipOpen}
+//           setMobileBetSlipOpen={setMobileBetSlipOpen}
+//           isSmallScreen={isSmallScreen}
+//           isMediumScreen={isMediumScreen}
+//         />
+//       </div>
+
+//       <MobileMenu 
+//         anchorEl={anchorEl}
+//         handleMenuClose={handleMenuClose}
+//         activeMatch={activeMatch}
+//         matches={matches}
+//         handleAddToBetSlip={handleAddToBetSlip}
+//         generateRandomOdds={generateRandomOdds}
+//         handlePredictClick={handlePredictClick}
+//         handleMoreClick={handleMoreClick}
+//       />
+//     </div>
+//   );
+// }
 "use client";
 import { useState, useEffect } from "react";
 import { FaHome, FaChevronLeft, FaChevronRight, FaEllipsisV } from "react-icons/fa";
@@ -16,35 +333,26 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  CircularProgress,
+  Chip,
+  Divider
 } from "@mui/material";
 
 const sportsData = [
   { 
     name: 'Football', 
     leagues: [
-      { name: 'Premier League', endpoint: 'https://v3.football.api-sports.io/leagues?id=39' },
-      { name: 'La Liga', endpoint: 'https://v3.football.api-sports.io/leagues?id=140' },
-      { name: 'Serie A', endpoint: 'https://v3.football.api-sports.io/leagues?id=135' },
-      { name: 'Bundesliga', endpoint: 'https://v3.football.api-sports.io/leagues?id=78' },
-      { name: 'Ligue 1', endpoint: 'https://v3.football.api-sports.io/leagues?id=61' },
-      { name: 'UEFA Champions League', endpoint: 'https://v3.football.api-sports.io/leagues?id=2' },
-      {
-        name: "Primeira Liga",
-        endpoint: "https://v3.football.api-sports.io/leagues?id=94"
-      },
-      {
-        name: "MLS",
-        endpoint: "https://v3.football.api-sports.io/leagues?id=253"
-      },
-      {
-        name: "Eredivisie",
-      endpoint: "https://v3.football.api-sports.io/leagues?id=88"
-      },
-      {
-        name: "Europa league",
-      endpoint: "https://v3.football.api-sports.io/leagues?id=3"
-      },
+      { name: 'Premier League', endpoint: 'https://v3.football.api-sports.io/leagues?id=39', oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=39' },
+      { name: 'La Liga', endpoint: 'https://v3.football.api-sports.io/leagues?id=140', oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=140' },
+      { name: 'Serie A', endpoint: 'https://v3.football.api-sports.io/leagues?id=135', oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=135' },
+      { name: 'Bundesliga', endpoint: 'https://v3.football.api-sports.io/leagues?id=78', oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=78' },
+      { name: 'Ligue 1', endpoint: 'https://v3.football.api-sports.io/leagues?id=61', oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=61' },
+      { name: 'UEFA Champions League', endpoint: 'https://v3.football.api-sports.io/leagues?id=2', oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=2' },
+      { name: "Primeira Liga", endpoint: "https://v3.football.api-sports.io/leagues?id=94", oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=94' },
+      { name: "MLS", endpoint: "https://v3.football.api-sports.io/leagues?id=253", oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=253' },
+      { name: "Eredivisie", endpoint: "https://v3.football.api-sports.io/leagues?id=88", oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=88' },
+      { name: "Europa league", endpoint: "https://v3.football.api-sports.io/leagues?id=3", oddsEndpoint: 'https://v3.football.api-sports.io/odds?season=2024&league=3' },
     ] 
   },
   { 
@@ -72,7 +380,6 @@ const sportsData = [
       { name: 'Triple A-East', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=60' },
       { name: 'Triple A national Championship', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=33' },
       { name: 'Triple A West', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=61' },
-      
     ] 
   },
   { 
@@ -112,14 +419,27 @@ export default function MatchesPage() {
   const [selectedLeague, setSelectedLeague] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [matches, setMatches] = useState([]);
+  const [oddsData, setOddsData] = useState({});
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeMatch, setActiveMatch] = useState(null);
   const [betSlip, setBetSlip] = useState([]);
   const [betAmount, setBetAmount] = useState("");
   const [mobileBetSlipOpen, setMobileBetSlipOpen] = useState(false);
+  const [moreOddsOpen, setMoreOddsOpen] = useState(false);
+  const [selectedMatchForMoreOdds, setSelectedMatchForMoreOdds] = useState(null);
+  const [predictionsOpen, setPredictionsOpen] = useState(false);
+  const [selectedMatchForPredictions, setSelectedMatchForPredictions] = useState(null);
+  const [predictionsData, setPredictionsData] = useState(null);
+  const [loadingPredictions, setLoadingPredictions] = useState(false);
   const matchesPerPage = 10;
   const isSmallScreen = useMediaQuery("(max-width:600px)");
   const isMediumScreen = useMediaQuery("(max-width:900px)");
+
+  // Calculate pagination variables
+  const totalPages = Math.ceil(matches.length / matchesPerPage);
+  const indexOfLastMatch = currentPage * matchesPerPage;
+  const indexOfFirstMatch = indexOfLastMatch - matchesPerPage;
+  const currentMatches = matches.slice(indexOfFirstMatch, indexOfLastMatch);
 
   useEffect(() => {
     if (selectedSport) {
@@ -152,36 +472,98 @@ export default function MatchesPage() {
 
   useEffect(() => {
     if (selectedLeague) {
-      const fetchMatches = async () => {
+      const fetchMatchesAndOdds = async () => {
         try {
+          // Fetch matches
           const leagueId = selectedLeague.split("id=")[1];
-          const response = await fetch(
+          const matchesResponse = await fetch(
             `https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=2024&from=2025-03-20&to=2025-10-08`,
             {
               method: "GET",
               headers: {
-                "x-apisports-key": "aa2a46cd86fefe10bf10a5358b1769a3",
+                "x-apisports-key": process.env.NEXT_PUBLIC_SPORTS_API_KEY,
               },
             }
           );
-          if (!response.ok) throw new Error("Failed to fetch matches");
-          const data = await response.json();
-          setMatches(data.response || []);
+          if (!matchesResponse.ok) throw new Error("Failed to fetch matches");
+          const matchesData = await matchesResponse.json();
+          setMatches(matchesData.response || []);
+          
+          // Fetch odds for the league
+          const leagueData = leagues.find(league => league.endpoint === selectedLeague);
+          if (leagueData && leagueData.oddsEndpoint) {
+            const oddsResponse = await fetch(leagueData.oddsEndpoint, {
+              method: "GET",
+              headers: {
+                "x-apisports-key": process.env.NEXT_PUBLIC_SPORTS_API_KEY,
+              },
+            });
+            if (!oddsResponse.ok) throw new Error("Failed to fetch odds data");
+            const oddsData = await oddsResponse.json();
+            
+            // Organize odds data by fixture ID
+            const oddsByFixture = {};
+            oddsData.response.forEach(item => {
+              oddsByFixture[item.fixture.id] = item;
+            });
+            setOddsData(oddsByFixture);
+          }
+          
           setCurrentPage(1);
         } catch (error) {
-          console.error("Error fetching matches:", error);
+          console.error("Error fetching data:", error);
           setMatches([]);
+          setOddsData({});
         }
       };
 
-      fetchMatches();
+      fetchMatchesAndOdds();
     }
-  }, [selectedLeague]);
+  }, [selectedLeague, leagues]);
 
-  const totalPages = Math.ceil(matches.length / matchesPerPage);
-  const indexOfLastMatch = currentPage * matchesPerPage;
-  const indexOfFirstMatch = indexOfLastMatch - matchesPerPage;
-  const currentMatches = matches.slice(indexOfFirstMatch, indexOfLastMatch);
+  const getMatchOdds = (matchId) => {
+    const odds = oddsData[matchId];
+    if (!odds) return null;
+    
+    const bookmaker = odds.bookmakers?.[0];
+    if (!bookmaker) return null;
+    
+    const matchWinnerBet = bookmaker.bets.find(bet => bet.id === 1);
+    if (!matchWinnerBet) return null;
+    
+    const homeOdd = matchWinnerBet.values.find(v => v.value === "Home")?.odd;
+    const drawOdd = matchWinnerBet.values.find(v => v.value === "Draw")?.odd;
+    const awayOdd = matchWinnerBet.values.find(v => v.value === "Away")?.odd;
+    
+    return {
+      home: homeOdd,
+      draw: drawOdd,
+      away: awayOdd
+    };
+  };
+
+  const fetchPredictions = async (fixtureId) => {
+    setLoadingPredictions(true);
+    try {
+      const response = await fetch(
+        `https://v3.football.api-sports.io/predictions?fixture=${fixtureId}`,
+        {
+          method: "GET",
+          headers: {
+            "x-apisports-key": process.env.NEXT_PUBLIC_SPORTS_API_KEY,
+          },
+        }
+      );
+      if (!response.ok) throw new Error("Failed to fetch predictions");
+      const data = await response.json();
+      setPredictionsData(data.response?.[0] || null);
+    } catch (error) {
+      console.error("Error fetching predictions:", error);
+      setPredictionsData(null);
+    } finally {
+      setLoadingPredictions(false);
+    }
+  };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -209,6 +591,7 @@ export default function MatchesPage() {
     setSelectedSport(sport);
     setSelectedLeague(null);
     setMatches([]);
+    setOddsData({});
   };
 
   const handleLeagueSelect = (leagueEndpoint) => {
@@ -225,11 +608,9 @@ export default function MatchesPage() {
     return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
-  const generateRandomOdds = () => {
-    return (Math.random() * 5 + 1).toFixed(2);
-  };
-
   const handleAddToBetSlip = (match, betType, odds) => {
+    if (!odds) return;
+    
     const existingIndex = betSlip.findIndex(bet => bet.matchId === match.fixture.id);
     
     if (existingIndex >= 0) {
@@ -285,11 +666,58 @@ export default function MatchesPage() {
   };
 
   const handlePredictClick = (match) => {
-    alert(`Predicting match: ${match.teams.home.name} vs ${match.teams.away.name}`);
+    setSelectedMatchForPredictions(match);
+    fetchPredictions(match.fixture.id);
+    setPredictionsOpen(true);
   };
 
   const handleMoreClick = (match) => {
-    alert(`More details for: ${match.teams.home.name} vs ${match.teams.away.name}\n\nDate: ${formatMatchDate(match.fixture.date)}\nTime: ${formatMatchTime(match.fixture.date)}\nVenue: ${match.fixture.venue?.name || 'Unknown'}`);
+    setSelectedMatchForMoreOdds(match);
+    setMoreOddsOpen(true);
+  };
+
+  const getMoreOddsOptions = (matchId) => {
+    const odds = oddsData[matchId];
+    if (!odds) return [];
+    
+    const bookmaker = odds.bookmakers?.[0];
+    if (!bookmaker) return [];
+    
+    return bookmaker.bets.filter(bet => bet.id !== 1);
+  };
+
+  const renderPredictionComparison = (home, draw, away) => {
+    const total = home + draw + away;
+    const homePercent = Math.round((home / total) * 100);
+    const drawPercent = Math.round((draw / total) * 100);
+    const awayPercent = Math.round((away / total) * 100);
+
+    return (
+      <div className="w-full">
+        <div className="flex justify-between mb-1">
+          <span className="text-sm font-medium">Home: {homePercent}%</span>
+          <span className="text-sm font-medium">Draw: {drawPercent}%</span>
+          <span className="text-sm font-medium">Away: {awayPercent}%</span>
+        </div>
+        <div className="flex h-4 rounded-md overflow-hidden">
+          <div 
+            className="bg-blue-500" 
+            style={{ width: `${homePercent}%` }}
+            title={`Home: ${homePercent}%`}
+          ></div>
+          <div 
+            className="bg-gray-500" 
+            style={{ width: `${drawPercent}%` }}
+            title={`Draw: ${drawPercent}%`}
+          ></div>
+          <div 
+            className="bg-red-500" 
+            style={{ width: `${awayPercent}%` }}
+            title={`Away: ${awayPercent}%`}
+          ></div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -409,9 +837,10 @@ export default function MatchesPage() {
                 {matches.length > 0 ? (
                   <div className="grid gap-3 sm:gap-4">
                     {currentMatches.map((match) => {
-                      const homeOdds = generateRandomOdds();
-                      const drawOdds = generateRandomOdds();
-                      const awayOdds = generateRandomOdds();
+                      const odds = getMatchOdds(match.fixture.id);
+                      const homeOdds = odds?.home || "N/A";
+                      const drawOdds = odds?.draw || "N/A";
+                      const awayOdds = odds?.away || "N/A";
 
                       return (
                         <div 
@@ -476,8 +905,9 @@ export default function MatchesPage() {
                                   size="small"
                                   color="primary"
                                   className="text-xs px-2 py-1 min-w-0"
-                                  onClick={() => handleAddToBetSlip(match, 'home', homeOdds)}
+                                  onClick={() => odds?.home && handleAddToBetSlip(match, 'home', homeOdds)}
                                   startIcon={<Avatar src={match.teams.home.logo} className="w-3 h-3" />}
+                                  disabled={!odds?.home}
                                 >
                                   {homeOdds}
                                 </Button>
@@ -486,7 +916,8 @@ export default function MatchesPage() {
                                   size="small"
                                   color="secondary"
                                   className="text-xs px-2 py-1 min-w-0"
-                                  onClick={() => handleAddToBetSlip(match, 'draw', drawOdds)}
+                                  onClick={() => odds?.draw && handleAddToBetSlip(match, 'draw', drawOdds)}
+                                  disabled={!odds?.draw}
                                 >
                                   {drawOdds}
                                 </Button>
@@ -495,8 +926,9 @@ export default function MatchesPage() {
                                   size="small"
                                   color="error"
                                   className="text-xs px-2 py-1 min-w-0"
-                                  onClick={() => handleAddToBetSlip(match, 'away', awayOdds)}
+                                  onClick={() => odds?.away && handleAddToBetSlip(match, 'away', awayOdds)}
                                   startIcon={<Avatar src={match.teams.away.logo} className="w-3 h-3" />}
+                                  disabled={!odds?.away}
                                 >
                                   {awayOdds}
                                 </Button>
@@ -807,6 +1239,194 @@ export default function MatchesPage() {
         </DialogActions>
       </Dialog>
 
+      {/* More Odds Dialog */}
+      <Dialog
+        open={moreOddsOpen}
+        onClose={() => setMoreOddsOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          style: {
+            backgroundColor: '#1F2937',
+            color: 'white',
+          },
+        }}
+      >
+        <DialogTitle className="text-teal-400">
+          {selectedMatchForMoreOdds && (
+            <>
+              {selectedMatchForMoreOdds.teams.home.name} vs {selectedMatchForMoreOdds.teams.away.name}
+              <div className="text-sm text-gray-400">
+                {formatMatchDate(selectedMatchForMoreOdds?.fixture.date)} at {formatMatchTime(selectedMatchForMoreOdds?.fixture.date)}
+              </div>
+            </>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          {selectedMatchForMoreOdds && (
+            <div className="space-y-4">
+              {getMoreOddsOptions(selectedMatchForMoreOdds.fixture.id).map((bet) => (
+                <div key={bet.id} className="bg-gray-800 p-3 rounded-lg">
+                  <h3 className="font-bold text-teal-400 mb-2">{bet.name}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {bet.values.map((value) => (
+                      <Button
+                        key={value.value}
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        className="text-xs"
+                        onClick={() => {
+                          handleAddToBetSlip(
+                            selectedMatchForMoreOdds, 
+                            `${bet.name} - ${value.value}`, 
+                            value.odd
+                          );
+                          setMoreOddsOpen(false);
+                        }}
+                      >
+                        {value.value} @ {value.odd}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMoreOddsOpen(false)} color="inherit">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Predictions Dialog */}
+      <Dialog
+        open={predictionsOpen}
+        onClose={() => setPredictionsOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          style: {
+            backgroundColor: '#1F2937',
+            color: 'white',
+          },
+        }}
+      >
+        <DialogTitle className="text-teal-400">
+          {selectedMatchForPredictions && (
+            <>
+              Match Prediction: {selectedMatchForPredictions.teams.home.name} vs {selectedMatchForPredictions.teams.away.name}
+              <div className="text-sm text-gray-400">
+                {formatMatchDate(selectedMatchForPredictions?.fixture.date)} at {formatMatchTime(selectedMatchForPredictions?.fixture.date)}
+              </div>
+            </>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          {loadingPredictions ? (
+            <div className="flex justify-center items-center h-40">
+              <CircularProgress />
+            </div>
+          ) : predictionsData ? (
+            <div className="space-y-4">
+              {/* Match Info */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Avatar src={selectedMatchForPredictions?.teams.home.logo} />
+                  <span className="font-medium">{selectedMatchForPredictions?.teams.home.name}</span>
+                </div>
+                <span className="mx-2 font-bold">vs</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{selectedMatchForPredictions?.teams.away.name}</span>
+                  <Avatar src={selectedMatchForPredictions?.teams.away.logo} />
+                </div>
+              </div>
+
+              <Divider className="my-3 bg-gray-600" />
+
+              {/* Prediction Comparison */}
+              <div>
+                <h3 className="font-bold text-lg mb-2">Prediction Comparison</h3>
+                {renderPredictionComparison(
+                  predictionsData.predictions.percent.home,
+                  predictionsData.predictions.percent.draw,
+                  predictionsData.predictions.percent.away
+                )}
+              </div>
+
+              {/* Winner Prediction */}
+              <div>
+                <h3 className="font-bold text-lg mb-2">Winner Prediction</h3>
+                <div className="bg-gray-800 p-3 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Predicted Winner:</span>
+                    <Chip 
+                      label={predictionsData.predictions.winner?.name || 'No clear winner'} 
+                      color={
+                        predictionsData.predictions.winner?.id === selectedMatchForPredictions?.teams.home.id ? 'primary' :
+                        predictionsData.predictions.winner?.id === selectedMatchForPredictions?.teams.away.id ? 'error' : 'default'
+                      }
+                    />
+                  </div>
+                  <div className="mt-2">
+                    <span className="text-sm text-gray-400">Advice: {predictionsData.predictions.advice || 'No advice available'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Goals Stats */}
+              <div>
+                <h3 className="font-bold text-lg mb-2">Goals Stats</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-800 p-3 rounded-lg">
+                    <h4 className="font-medium text-teal-400 mb-1">Home Team</h4>
+                    <p className="text-sm">Goals For: {predictionsData.teams.home.league.goals?.for?.total?.average || 'N/A'}</p>
+                    <p className="text-sm">Goals Against: {predictionsData.teams.home.league.goals?.against?.total?.average || 'N/A'}</p>
+                  </div>
+                  <div className="bg-gray-800 p-3 rounded-lg">
+                    <h4 className="font-medium text-teal-400 mb-1">Away Team</h4>
+                    <p className="text-sm">Goals For: {predictionsData.teams.away.league.goals?.for?.total?.average || 'N/A'}</p>
+                    <p className="text-sm">Goals Against: {predictionsData.teams.away.league.goals?.against?.total?.average || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* H2H Stats */}
+              {predictionsData.h2h.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Last 5 Head-to-Head Matches</h3>
+                  <div className="space-y-2">
+                    {predictionsData.h2h.slice(0, 5).map((match, index) => (
+                      <div key={index} className="bg-gray-800 p-2 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">{new Date(match.fixture.date).toLocaleDateString()}</span>
+                          <span className="text-sm font-bold">
+                            {match.teams.home.name} {match.goals.home} - {match.goals.away} {match.teams.away.name}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <Typography variant="h6" className="text-gray-400">
+                No prediction data available for this match
+              </Typography>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPredictionsOpen(false)} color="inherit">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Menu for small screens */}
       <Menu
         anchorEl={anchorEl}
@@ -820,85 +1440,88 @@ export default function MatchesPage() {
         }}
       >
         {activeMatch && matches.find(m => m.fixture.id === activeMatch) && (
-          [
-            <MuiMenuItem key="home" onClick={(e) => {
-              const match = matches.find(m => m.fixture.id === activeMatch);
-              handleAddToBetSlip(match, 'home', generateRandomOdds());
-              handleMenuClose();
-            }}>
-              <Button 
-                fullWidth
-                variant="contained" 
-                color="primary"
-                size="small"
-                className="text-xs"
-                startIcon={<Avatar src={matches.find(m => m.fixture.id === activeMatch)?.teams.home.logo} className="w-3 h-3" />}
-              >
-                Win Home
-              </Button>
-            </MuiMenuItem>,
-            <MuiMenuItem key="draw" onClick={(e) => {
-              const match = matches.find(m => m.fixture.id === activeMatch);
-              handleAddToBetSlip(match, 'draw', generateRandomOdds());
-              handleMenuClose();
-            }}>
-              <Button 
-                fullWidth
-                variant="contained" 
-                color="secondary"
-                size="small"
-                className="text-xs"
-              >
-                Draw
-              </Button>
-            </MuiMenuItem>,
-            <MuiMenuItem key="away" onClick={(e) => {
-              const match = matches.find(m => m.fixture.id === activeMatch);
-              handleAddToBetSlip(match, 'away', generateRandomOdds());
-              handleMenuClose();
-            }}>
-              <Button 
-                fullWidth
-                variant="contained" 
-                color="error"
-                size="small"
-                className="text-xs"
-                startIcon={<Avatar src={matches.find(m => m.fixture.id === activeMatch)?.teams.away.logo} className="w-3 h-3" />}
-              >
-                Win Away
-              </Button>
-            </MuiMenuItem>,
-            <MuiMenuItem key="predict" onClick={(e) => {
-              const match = matches.find(m => m.fixture.id === activeMatch);
-              handlePredictClick(match);
-              handleMenuClose();
-            }}>
-              <Button 
-                fullWidth
-                variant="outlined" 
-                color="info"
-                size="small"
-                className="text-xs"
-              >
-                Predict
-              </Button>
-            </MuiMenuItem>,
-            <MuiMenuItem key="more" onClick={(e) => {
-              const match = matches.find(m => m.fixture.id === activeMatch);
-              handleMoreClick(match);
-              handleMenuClose();
-            }}>
-              <Button 
-                fullWidth
-                variant="outlined" 
-                color="inherit"
-                size="small"
-                className="text-xs"
-              >
-                More
-              </Button>
-            </MuiMenuItem>
-          ]
+          (() => {
+            const match = matches.find(m => m.fixture.id === activeMatch);
+            const odds = getMatchOdds(activeMatch);
+            
+            return [
+              <MuiMenuItem key="home" onClick={(e) => {
+                handleAddToBetSlip(match, 'home', odds?.home);
+                handleMenuClose();
+              }}
+              disabled={!odds?.home}>
+                <Button 
+                  fullWidth
+                  variant="contained" 
+                  color="primary"
+                  size="small"
+                  className="text-xs"
+                  startIcon={<Avatar src={match?.teams.home.logo} className="w-3 h-3" />}
+                >
+                  Win Home @ {odds?.home || "N/A"}
+                </Button>
+              </MuiMenuItem>,
+              <MuiMenuItem key="draw" onClick={(e) => {
+                handleAddToBetSlip(match, 'draw', odds?.draw);
+                handleMenuClose();
+              }}
+              disabled={!odds?.draw}>
+                <Button 
+                  fullWidth
+                  variant="contained" 
+                  color="secondary"
+                  size="small"
+                  className="text-xs"
+                >
+                  Draw @ {odds?.draw || "N/A"}
+                </Button>
+              </MuiMenuItem>,
+              <MuiMenuItem key="away" onClick={(e) => {
+                handleAddToBetSlip(match, 'away', odds?.away);
+                handleMenuClose();
+              }}
+              disabled={!odds?.away}>
+                <Button 
+                  fullWidth
+                  variant="contained" 
+                  color="error"
+                  size="small"
+                  className="text-xs"
+                  startIcon={<Avatar src={match?.teams.away.logo} className="w-3 h-3" />}
+                >
+                  Win Away @ {odds?.away || "N/A"}
+                </Button>
+              </MuiMenuItem>,
+              <MuiMenuItem key="predict" onClick={(e) => {
+                handlePredictClick(match);
+                handleMenuClose();
+              }}>
+                <Button 
+                  fullWidth
+                  variant="outlined" 
+                  color="info"
+                  size="small"
+                  className="text-xs"
+                >
+                  Predict
+                </Button>
+              </MuiMenuItem>,
+              <MuiMenuItem key="more" onClick={(e) => {
+                handleMoreClick(match);
+                handleMenuClose();
+              }}>
+                <Button 
+                  fullWidth
+                  variant="outlined" 
+                  color="inherit"
+                  size="small"
+                  className="text-xs"
+                >
+                  More
+                </Button>
+              </MuiMenuItem>
+            ]
+          })()
         )}
       </Menu>
     </div>
