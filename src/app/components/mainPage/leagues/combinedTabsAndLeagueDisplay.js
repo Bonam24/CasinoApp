@@ -1,18 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  AppBar,
-  Box,
-  Tab,
-  Tabs,
-  Typography,
-  Paper,
-  Container,
-  Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CircularProgress,
-  useMediaQuery
+  Box, Tab, Tabs, Typography, Paper, Container, Grid, 
+  Card, CardMedia, CardContent, CircularProgress, useMediaQuery 
 } from '@mui/material';
 import PropTypes from 'prop-types';
 
@@ -60,85 +49,72 @@ const SportsLeaguesCombined = () => {
     { 
       name: 'Football', 
       leagues: [
-        { name: 'Premier League', endpoint: 'https://v3.football.api-sports.io/leagues?id=39' },
-        { name: 'La Liga', endpoint: 'https://v3.football.api-sports.io/leagues?id=140' },
-        { name: 'Serie A', endpoint: 'https://v3.football.api-sports.io/leagues?id=135' },
-        { name: 'Bundesliga', endpoint: 'https://v3.football.api-sports.io/leagues?id=78' },
-        { name: 'Ligue 1', endpoint: 'https://v3.football.api-sports.io/leagues?id=61' },
-        { name: 'UEFA Champions League', endpoint: 'https://v3.football.api-sports.io/leagues?id=2' },
-        {
-          name: "Primeira Liga",
-          endpoint: "https://v3.football.api-sports.io/leagues?id=94"
-        },
-        {
-          name: "MLS",
-          endpoint: "https://v3.football.api-sports.io/leagues?id=253"
-        },
-        {
-          name: "Eredivisie",
-        endpoint: "https://v3.football.api-sports.io/leagues?id=88"
-        },
-        {
-          name: "Europa league",
-        endpoint: "https://v3.football.api-sports.io/leagues?id=3"
-        },
+        { name: 'Premier League', id: 39, sport: 'football' },
+        { name: 'La Liga', id: 140, sport: 'football' },
+        { name: 'Serie A', id: 135, sport: 'football' },
+        { name: 'Bundesliga', id: 78, sport: 'football' },
+        { name: 'Ligue 1', id: 61, sport: 'football' },
+        { name: 'UEFA Champions League', id: 2, sport: 'football' },
+        { name: "Primeira Liga", id: 94, sport: 'football' },
+        { name: "MLS", id: 253, sport: 'football' },
+        { name: "Eredivisie", id: 88, sport: 'football' },
+        { name: "Europa league", id: 3, sport: 'football' },
       ] 
     },
     { 
       name: 'Hockey', 
       leagues: [
-        { name: 'AHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=58'},
-        { name: 'CHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=125'},
-        { name: 'ECHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=59'},
-        { name: 'FHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=61'},
-        { name: 'FPHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=260'},
-        { name: 'NCAA', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=256'},
-        { name: 'NHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=57'},
-        { name: 'SPHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=60'},
-        { name: 'USHL', endpoint: 'https://v1.hockey.api-sports.io/leagues?id=62'},
+        { name: 'AHL', id: 58, sport: 'hockey' },
+        { name: 'CHL', id: 125, sport: 'hockey' },
+        { name: 'ECHL', id: 59, sport: 'hockey' },
+        { name: 'FHL', id: 61, sport: 'hockey' },
+        { name: 'FPHL', id: 260, sport: 'hockey' },
+        { name: 'NCAA', id: 256, sport: 'hockey' },
+        { name: 'NHL', id: 57, sport: 'hockey' },
+        { name: 'SPHL', id: 60, sport: 'hockey' },
+        { name: 'USHL', id: 62, sport: 'hockey' },
       ] 
     },
     { 
       name: 'Baseball', 
       leagues: [
-        { name: 'FL', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=67' },
-        { name: 'IL', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=3' },
-        { name: 'MLB', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=1' },
-        { name: 'MLB_Spring Training', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=71' },
-        { name: 'PCL', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=4' },
-        { name: 'Triple A-East', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=60' },
-        { name: 'Triple A national Championship', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=33' },
-        { name: 'Triple A West', endpoint: 'https://v1.baseball.api-sports.io/leagues?id=61' },
-        
+        { name: 'FL', id: 67, sport: 'baseball' },
+        { name: 'IL', id: 3, sport: 'baseball' },
+        { name: 'MLB', id: 1, sport: 'baseball' },
+        { name: 'MLB_Spring Training', id: 71, sport: 'baseball' },
+        { name: 'PCL', id: 4, sport: 'baseball' },
+        { name: 'Triple A-East', id: 60, sport: 'baseball' },
+        { name: 'Triple A national Championship', id: 33, sport: 'baseball' },
+        { name: 'Triple A West', id: 61, sport: 'baseball' },
       ] 
     },
     { 
       name: 'BasketBall', 
       leagues: [
-        { name: 'NBA', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=12' },
-        { name: 'NBA G-League', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=20' },
-        { name: 'NBA Sacramento Summer league', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=21' },
-        { name: 'NBA Cup', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=422' },
-        { name: 'NCAA', endpoint: 'https://v1.basketball.api-sports.io/leagues?id=116' },
+        { name: 'NBA', id: 12, sport: 'basketball' },
+        { name: 'NBA G-League', id: 20, sport: 'basketball' },
+        { name: 'NBA Sacramento Summer league', id: 21, sport: 'basketball' },
+        { name: 'NBA Cup', id: 422, sport: 'basketball' },
+        { name: 'NCAA', id: 116, sport: 'basketball' },
       ] 
     },
     { 
       name: 'Formula 1', 
       leagues: [
-        { name: 'F1 World Championship', endpoint: 'https://v1.formula-1.api-sports.io/leagues?id=1' },
+        { name: 'F1 World Championship', id: 1, sport: 'formula-1' },
       ] 
     },
     { 
       name: 'Rugby', 
       leagues: [
-        { name: 'Major League Rugby', endpoint: 'https://v1.rugby.api-sports.io/leagues?id=44' },
-        { name: 'Pro Rugby', endpoint: 'https://v1.rugby.api-sports.io/leagues?id=43' },
+        { name: 'Major League Rugby', id: 44, sport: 'rugby' },
+        { name: 'Pro Rugby', id: 43, sport: 'rugby' },
       ] 
     },
     { 
       name: 'AFL', 
       leagues: [
-        { name: 'AFL Premiership', endpoint: 'https://v1.afl.api-sports.io/leagues?id=1' },
+        { name: 'AFL Premiership', id: 1, sport: 'afl' },
       ] 
     },
   ];
@@ -149,27 +125,21 @@ const SportsLeaguesCombined = () => {
   };
 
   const getLeagueLogo = (leagueData, leagueName) => {
-    // Try different possible logo paths
     if (leagueData.league?.logo) return leagueData.league.logo;
     if (leagueData.logo) return leagueData.logo;
     if (leagueData.flag) return leagueData.flag;
     
-    // Fallback to placeholder with league initials
     const initials = leagueName.split(' ').map(word => word[0]).join('');
     return `https://via.placeholder.com/150/223/13dfae?text=${initials}`;
   };
 
-  const fetchLeagues = async (leagueEndpoints) => {
+  const fetchLeagues = async (leagues) => {
     setLoading(true);
     try {
-      const leaguePromises = leagueEndpoints.map(async (league) => {
+      const leaguePromises = leagues.map(async (league) => {
         try {
-          const response = await fetch(league.endpoint, {
-            headers: {
-              'x-apisports-key': 'aa2a46cd86fefe10bf10a5358b1769a3',
-            },
-          });
-
+          const response = await fetch(`/api/fetchGames/displayLeagues?id=${league.id}&sport=${league.sport}`);
+          
           if (!response.ok) {
             throw new Error(`Failed to fetch data for ${league.name}`);
           }
