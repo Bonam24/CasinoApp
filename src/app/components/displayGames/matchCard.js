@@ -1,30 +1,26 @@
-// components/MatchCard.js
 import { useState } from "react";
-import { Avatar, Button } from "@mui/material";
+import { 
+  Avatar,
+  Button,
+  Divider,
+  Chip
+} from "@mui/material";
 import { FaEllipsisV } from "react-icons/fa";
 
 export default function MatchCard({ 
   match, 
+  odds, 
   isSmallScreen, 
-  handleMenuOpen, 
   handleAddToBetSlip, 
-  handlePredictClick, 
-  handleMoreClick 
+  handleMenuOpen,
+  handlePredictClick,
+  handleMoreClick,
+  formatMatchDate,
+  formatMatchTime
 }) {
-  const generateRandomOdds = () => (Math.random() * 5 + 1).toFixed(2);
-  const homeOdds = generateRandomOdds();
-  const drawOdds = generateRandomOdds();
-  const awayOdds = generateRandomOdds();
-
-  const formatMatchTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatMatchDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
-  };
+  const homeOdds = odds?.home || "N/A";
+  const drawOdds = odds?.draw || "N/A";
+  const awayOdds = odds?.away || "N/A";
 
   return (
     <div 
@@ -89,8 +85,9 @@ export default function MatchCard({
               size="small"
               color="primary"
               className="text-xs px-2 py-1 min-w-0"
-              onClick={() => handleAddToBetSlip(match, 'home', homeOdds)}
+              onClick={() => odds?.home && handleAddToBetSlip(match, 'home', homeOdds)}
               startIcon={<Avatar src={match.teams.home.logo} className="w-3 h-3" />}
+              disabled={!odds?.home}
             >
               {homeOdds}
             </Button>
@@ -99,7 +96,8 @@ export default function MatchCard({
               size="small"
               color="secondary"
               className="text-xs px-2 py-1 min-w-0"
-              onClick={() => handleAddToBetSlip(match, 'draw', drawOdds)}
+              onClick={() => odds?.draw && handleAddToBetSlip(match, 'draw', drawOdds)}
+              disabled={!odds?.draw}
             >
               {drawOdds}
             </Button>
@@ -108,8 +106,9 @@ export default function MatchCard({
               size="small"
               color="error"
               className="text-xs px-2 py-1 min-w-0"
-              onClick={() => handleAddToBetSlip(match, 'away', awayOdds)}
+              onClick={() => odds?.away && handleAddToBetSlip(match, 'away', awayOdds)}
               startIcon={<Avatar src={match.teams.away.logo} className="w-3 h-3" />}
+              disabled={!odds?.away}
             >
               {awayOdds}
             </Button>

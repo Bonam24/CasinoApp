@@ -1,7 +1,6 @@
-// components/Header.js
 import { FaHome } from "react-icons/fa";
 
-export default function HeaderGames() {
+export default function Header() {
   return (
     <div className="bg-teal-500 text-white p-3 sm:p-4 rounded-lg shadow-lg mb-4 sm:mb-6 flex justify-between items-center">
       <div className="flex items-center gap-2 sm:gap-3">

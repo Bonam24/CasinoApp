@@ -423,7 +423,7 @@ const Dashboard = () => {
                 </Typography>
                 <Box display="flex" flexDirection="column" gap={2}>
                   <CustomButton startIcon={<AddCircleOutline />} href="/otherPages/displayGames">Place a Bet</CustomButton>
-                  <CustomButton startIcon={<History />}>Recent Bets</CustomButton>
+                  <CustomButton startIcon={<History />} href="/otherPages/stripe">Recent Bets</CustomButton>
                   <CustomButton startIcon={<AccountBalance />}>Deposit Funds</CustomButton>
                   <CustomButton startIcon={<LocalAtm />}>Withdraw Funds</CustomButton>
                   <CustomButton startIcon={<Redeem />}>View Promotions</CustomButton>
