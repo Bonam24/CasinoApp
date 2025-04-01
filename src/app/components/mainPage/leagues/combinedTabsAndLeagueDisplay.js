@@ -104,13 +104,7 @@ const SportsLeaguesCombined = () => {
         { name: 'F1 World Championship', id: 1, sport: 'formula-1' },
       ] 
     },
-    { 
-      name: 'Rugby', 
-      leagues: [
-        { name: 'Major League Rugby', id: 44, sport: 'rugby' },
-        { name: 'Pro Rugby', id: 43, sport: 'rugby' },
-      ] 
-    },
+    
     { 
       name: 'AFL', 
       leagues: [
