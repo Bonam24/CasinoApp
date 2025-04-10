@@ -4,6 +4,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const sport = searchParams.get('sport');
+  const type = searchParams.get('type'); // New parameter for circuit type
 
   if (!id || !sport) {
     return NextResponse.json(
@@ -19,12 +20,18 @@ export async function GET(request) {
       baseball: 'v1',
       basketball: 'v1',
       'formula-1': 'v1',
-      rugby: 'v1',
-      afl: 'v1'
+      nfl: 'v1'
     };
 
     const version = apiVersions[sport] || 'v1';
-    const apiUrl = `https://${version}.${sport}.api-sports.io/leagues?id=${id}`;
+    let apiUrl;
+    
+    // Special endpoint for Formula 1 circuits
+    if (sport === 'formula-1' && type === 'circuit') {
+      apiUrl = `https://${version}.formula-1.api-sports.io/circuits?id=${id}`;
+    } else {
+      apiUrl = `https://${version}.${sport}.api-sports.io/leagues?id=${id}`;
+    }
 
     const response = await fetch(apiUrl, {
       headers: {
@@ -48,7 +55,6 @@ export async function GET(request) {
   }
 }
 
-// Optionally add other HTTP methods
 export async function POST(request) {
   return NextResponse.json(
     { error: 'Method not allowed' },

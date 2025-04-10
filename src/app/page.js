@@ -5,7 +5,8 @@ import LogoWithDescription from "./components/mainPage/middlepart/logoWithDescri
 import Footer from "./components/mainPage/footer/footer";
 import Chatbot from "./components/mainPage/middlepart/chatbot";
 import HeaderPlusMarquee from "./components/mainPage/header components/headerplusMarquee";
-import SportsLeaguesCombined from "./components/mainPage/leagues/combinedTabsAndLeagueDisplay";
+import SportsLeaguesCombined from "./components/mainPage/tabsAndLeagues/combinedTabsAndLeagueDisplay";
+
 
 
 

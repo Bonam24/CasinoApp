@@ -68,8 +68,6 @@ const SportsLeaguesCombined = () => {
         { name: 'CHL', id: 125, sport: 'hockey' },
         { name: 'ECHL', id: 59, sport: 'hockey' },
         { name: 'FHL', id: 61, sport: 'hockey' },
-        { name: 'FPHL', id: 260, sport: 'hockey' },
-        { name: 'NCAA', id: 256, sport: 'hockey' },
         { name: 'NHL', id: 57, sport: 'hockey' },
         { name: 'SPHL', id: 60, sport: 'hockey' },
         { name: 'USHL', id: 62, sport: 'hockey' },
@@ -78,10 +76,8 @@ const SportsLeaguesCombined = () => {
     { 
       name: 'Baseball', 
       leagues: [
-        { name: 'FL', id: 67, sport: 'baseball' },
         { name: 'IL', id: 3, sport: 'baseball' },
         { name: 'MLB', id: 1, sport: 'baseball' },
-        { name: 'MLB_Spring Training', id: 71, sport: 'baseball' },
         { name: 'PCL', id: 4, sport: 'baseball' },
         { name: 'Triple A-East', id: 60, sport: 'baseball' },
         { name: 'Triple A national Championship', id: 33, sport: 'baseball' },
@@ -101,14 +97,16 @@ const SportsLeaguesCombined = () => {
     { 
       name: 'Formula 1', 
       leagues: [
-        { name: 'F1 World Championship', id: 1, sport: 'formula-1' },
+        { name: 'Monaco Grand Prix', id: 7, sport: 'formula-1' },
+        { name: 'USA Grand Prix', id: 20, sport: 'formula-1' },
+        { name: 'Miami International Autodrome', id: 31, sport: 'formula-1' },
+        { name: 'Las Vegas Strip Circuit', id: 32, sport: 'formula-1' },
       ] 
     },
-    
     { 
-      name: 'AFL', 
+      name: 'NFL', 
       leagues: [
-        { name: 'AFL Premiership', id: 1, sport: 'afl' },
+        { name: 'NCAA', id: 2, sport: 'american-football' },
       ] 
     },
   ];
@@ -122,6 +120,7 @@ const SportsLeaguesCombined = () => {
     if (leagueData.league?.logo) return leagueData.league.logo;
     if (leagueData.logo) return leagueData.logo;
     if (leagueData.flag) return leagueData.flag;
+    if (leagueData.image) return leagueData.image; // For Formula 1 circuits
     
     const initials = leagueName.split(' ').map(word => word[0]).join('');
     return `https://via.placeholder.com/150/223/13dfae?text=${initials}`;
@@ -132,19 +131,46 @@ const SportsLeaguesCombined = () => {
     try {
       const leaguePromises = leagues.map(async (league) => {
         try {
-          const response = await fetch(`/api/fetchGames/displayLeagues?id=${league.id}&sport=${league.sport}`);
+          let endpoint = `/api/fetchGames/displayLeagues?id=${league.id}&sport=${league.sport}`;
+          
+          // Special handling for Formula 1 circuits
+          if (league.sport === 'formula-1') {
+            endpoint = `/api/fetchGames/displayLeagues?id=${league.id}&sport=${league.sport}&type=circuit`;
+          }
+
+          const response = await fetch(endpoint);
           
           if (!response.ok) {
             throw new Error(`Failed to fetch data for ${league.name}`);
           }
 
           const data = await response.json();
-          if (!data.response || data.response.length === 0) return null;
+          
+          if (!data.response || data.response.length === 0) {
+            console.warn(`No data received for ${league.name}`);
+            return {
+              id: league.id,
+              name: league.name,
+              logo: `https://via.placeholder.com/150/223/13dfae?text=${league.name.substring(0, 2)}`,
+              error: 'No data received'
+            };
+          }
           
           const leagueData = data.response[0];
           
+          // Handle Formula 1 circuits differently
+          if (league.sport === 'formula-1') {
+            return {
+              id: leagueData.id || league.id,
+              name: leagueData.name || league.name,
+              logo: getLeagueLogo(leagueData, league.name),
+              competition: leagueData.competition,
+              originalData: leagueData
+            };
+          }
+          
           return {
-            id: leagueData.league?.id || leagueData.id || Math.random().toString(36).substr(2, 9),
+            id: leagueData.league?.id || leagueData.id || league.id,
             name: leagueData.league?.name || leagueData.name || league.name,
             logo: getLeagueLogo(leagueData, league.name),
             originalData: leagueData
@@ -152,7 +178,7 @@ const SportsLeaguesCombined = () => {
         } catch (err) {
           console.error(`Error fetching ${league.name}:`, err);
           return {
-            id: Math.random().toString(36).substr(2, 9),
+            id: league.id || Math.random().toString(36).substr(2, 9),
             name: league.name,
             logo: `https://via.placeholder.com/150/223/13dfae?text=${league.name.substring(0, 2)}`,
             error: err.message
@@ -163,6 +189,7 @@ const SportsLeaguesCombined = () => {
       const leagueResults = await Promise.all(leaguePromises);
       setLeagues(leagueResults.filter(league => league !== null));
     } catch (err) {
+      console.error('Error in fetchLeagues:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -278,7 +305,7 @@ const SportsLeaguesCombined = () => {
               letterSpacing: '1px',
             }}
           >
-            {sportsData[value].name} Leagues
+            {sportsData[value].name} {sportsData[value].name === 'Formula 1' ? 'Circuits' : 'Leagues'}
           </Typography>
           
           {loading ? (
@@ -287,62 +314,98 @@ const SportsLeaguesCombined = () => {
             </Box>
           ) : (
             <Grid container spacing={isSmallScreen ? 1 : 2} justifyContent="center">
-              {leagues.map((league) => (
-                <Grid item xs={6} sm={4} md={3} key={league.id}>
-                  <Card
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      border: '1px solid transparent',
-                      '&:hover': {
-                        transform: 'scale(1.03)',
-                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                        borderColor: '#13dfae',
-                      },
-                    }}
-                  >
-                    <CardMedia
-                      component="img"
+              {leagues.length > 0 ? (
+                leagues.map((league) => (
+                  <Grid item xs={6} sm={4} md={3} key={league.id}>
+                    <Card
                       sx={{
-                        height: isSmallScreen ? '70px' : '100px',
-                        objectFit: 'contain',
-                        p: isSmallScreen ? 0.5 : 1.5,
-                        backgroundColor: '#e1f7e7',
-                      }}
-                      image={league.logo}
-                      alt={league.name}
-                      onError={(e) => {
-                        e.target.src = `https://via.placeholder.com/150/223/13dfae?text=${league.name.substring(0, 2)}`;
-                      }}
-                    />
-                    <CardContent
-                      sx={{
-                        flexGrow: 1,
-                        textAlign: 'center',
-                        p: isSmallScreen ? '8px' : '12px',
-                        backgroundColor: '#223',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        border: '1px solid transparent',
+                        '&:hover': {
+                          transform: 'scale(1.03)',
+                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                          borderColor: '#13dfae',
+                        },
                       }}
                     >
-                      <Typography
-                        variant={isSmallScreen ? "caption" : "body2"}
+                      <CardMedia
+                        component="img"
                         sx={{
-                          fontWeight: 'bold',
-                          color: '#13dfae',
-                          textTransform: 'uppercase',
-                          fontSize: isSmallScreen ? '0.6rem' : '0.75rem',
-                          lineHeight: 1.2
+                          height: isSmallScreen ? '70px' : '100px',
+                          objectFit: 'contain',
+                          p: isSmallScreen ? 0.5 : 1.5,
+                          backgroundColor: '#e1f7e7',
+                        }}
+                        image={league.logo}
+                        alt={league.name}
+                        onError={(e) => {
+                          e.target.src = `https://via.placeholder.com/150/223/13dfae?text=${league.name.substring(0, 2)}`;
+                        }}
+                      />
+                      <CardContent
+                        sx={{
+                          flexGrow: 1,
+                          textAlign: 'center',
+                          p: isSmallScreen ? '8px' : '12px',
+                          backgroundColor: '#223',
                         }}
                       >
-                        {league.name}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+                        <Typography
+                          variant={isSmallScreen ? "caption" : "body2"}
+                          sx={{
+                            fontWeight: 'bold',
+                            color: '#13dfae',
+                            textTransform: 'uppercase',
+                            fontSize: isSmallScreen ? '0.6rem' : '0.75rem',
+                            lineHeight: 1.2
+                          }}
+                        >
+                          {league.name}
+                        </Typography>
+                        {league.competition && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: '#fff',
+                              fontSize: isSmallScreen ? '0.5rem' : '0.65rem',
+                              display: 'block',
+                              mt: 0.5
+                            }}
+                          >
+                            {league.competition.name}
+                          </Typography>
+                        )}
+                        {league.error && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'error.main',
+                              fontSize: isSmallScreen ? '0.5rem' : '0.65rem',
+                              display: 'block',
+                              mt: 0.5
+                            }}
+                          >
+                            {league.error}
+                          </Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))
+              ) : (
+                <Typography
+                  variant="body1"
+                  align="center"
+                  sx={{ color: '#fff', width: '100%', mt: 4 }}
+                >
+                  No circuits found. Please try again later.
+                </Typography>
+              )}
             </Grid>
           )}
         </Paper>

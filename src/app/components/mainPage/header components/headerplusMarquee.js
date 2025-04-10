@@ -1,5 +1,5 @@
 import React from "react";
-import HeaderCombine from "./headerCombine";
+import Header from "./header";
 import ScrollingEffectElement from "./scrollingEffectElements";
 
 export default function HeaderPlusMarquee() {
@@ -13,7 +13,7 @@ export default function HeaderPlusMarquee() {
                 width: "100%", 
                 zIndex: 1000 
             }}>
-                <HeaderCombine />
+                <Header />
                 <ScrollingEffectElement />
             </div>
 

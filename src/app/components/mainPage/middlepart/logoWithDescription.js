@@ -1,5 +1,5 @@
 import { Box, Typography, Button } from '@mui/material';
-const BundlesBetphoneimg = '/images/phoneimg.png'; // Your image path
+const BundlesBetphoneimg = '/images/phoneimg.png'; 
 
 export default function WelcomeSection() {
   return (

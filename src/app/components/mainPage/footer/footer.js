@@ -37,7 +37,7 @@ export default function Footer() {
           marginBottom: 1,
         }}
       >
-        BUNDLESBET
+        BUNDLESBETS
       </Typography>
 
       {/* Tagline */}
@@ -67,7 +67,7 @@ export default function Footer() {
 
       {/* Bottom Line */}
       <Box sx={{ marginTop: 2, fontSize: '0.9rem', opacity: 0.6 }}>
-        &copy; {new Date().getFullYear()} BundlesBet. All Rights Reserved.
+        &copy; {new Date().getFullYear()} BundlesBets. All Rights Reserved.
       </Box>
     </Box>
   );

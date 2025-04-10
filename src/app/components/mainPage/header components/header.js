@@ -1,7 +1,4 @@
-import {AppBar,Toolbar,Typography,Tabs,Tab,Box,Button,useMediaQuery,IconButton,Drawer,List,ListItem,ListItemButton,Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+import {AppBar,Toolbar,Typography,Tabs,Tab,Box,Button,useMediaQuery,IconButton,Drawer,List,ListItem,ListItemButton
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useState } from 'react';
@@ -10,14 +7,6 @@ import { useState } from 'react';
 export default function Header() {
   const [value, setValue] = useState(1);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [walletDialogOpen, setWalletDialogOpen] = useState(false);
-  const handleWalletDialogOpen = () => {
-    setWalletDialogOpen(true);
-  };
-
-  const handleWalletDialogClose = () => {
-    setWalletDialogOpen(false);
-  };
 
   const isMediumScreen = useMediaQuery('(max-width: 1080px)');
   const isSmallScreen = useMediaQuery('(max-width: 600px)');
